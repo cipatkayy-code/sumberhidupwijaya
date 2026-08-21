@@ -167,7 +167,7 @@
                                 <th class="py-3 px-4">Nama Supir</th>
                                 <th class="py-3 px-4">No. Kontrak / DO</th>
                                 <th class="py-3 px-4">Rute (Asal - Tujuan)</th>
-                                <th class="py-3 px-4 text-center">Status Kantor</th>
+                                <th class="py-3 px-4 text-center">Status</th>
                                 <th class="py-3 px-4 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -825,8 +825,8 @@ function jsonResponse(data) {
             let text = `*REKAP SPB BELUM DITERIMA KANTOR*\n\n`;
             pendingItems.forEach((item, idx) => {
                 text += `Nama : ${item.supir}\n`;
-                text += `no kontrak : ${item.noKontrak}\n`;
-                text += `asal dan tujuan : ${item.asal} - ${item.tujuan}\n`;
+                text += `No Kontrak : ${item.noKontrak}\n`;
+                text += `Asal dan tujuan : ${item.asal} - ${item.tujuan}\n`;
                 text += `Status : SPB belum di terima kantor\n`;
                 if (idx !== pendingItems.length - 1) text += `\n`;
             });
