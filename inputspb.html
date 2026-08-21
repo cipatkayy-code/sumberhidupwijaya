@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Monitoring & Status Penerimaan SPB</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .active-tab {
+            border-bottom: 3px solid #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-12">
+
+    <!-- Header Navigation -->
+    <header class="bg-blue-700 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-truck-ramp-box text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">Monitoring Surat SPB</h1>
+            </div>
+            <button id="btnSettings" class="text-sm bg-blue-800 hover:bg-blue-900 px-3 py-1.5 rounded-lg transition flex items-center gap-2">
+                <i class="fa-solid fa-gear"></i>
+                <span>Pengaturan Sheets</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Column 1: Input Form & Management (4 Cols) -->
+        <section class="lg:col-span-4 space-y-6">
+            
+            <!-- Card Form Input SPB -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-file-circle-plus text-blue-600"></i>
+                    Input SPB Baru
+                </h2>
+
+                <form id="formSPB" class="space-y-4">
+                    <!-- Dropdown / Add Driver -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Supir</label>
+                        <div class="flex gap-2">
+                            <select id="selectSupir" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                                <option value="">-- Pilih Supir Terdata --</option>
+                            </select>
+                            <button type="button" id="btnModalSupir" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 rounded-lg text-sm font-semibold transition" title="Tambah Supir Baru">
+                                <i class="fa-solid fa-user-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Nomor Kontrak / DO / SPB -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. Kontrak / DO / SPB</label>
+                        <input type="text" id="inputNoKontrak" required placeholder="Contoh: 14/spb-sbl/2026" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                    </div>
+
+                    <!-- Asal & Tujuan -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Asal</label>
+                            <div class="flex gap-1">
+                                <select id="inputAsal" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5"></select>
+                                <button type="button" id="btnModalAsal" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 rounded-lg text-sm" title="Kelola Asal">
+                                    <i class="fa-solid fa-gear"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tujuan</label>
+                            <div class="flex gap-1">
+                                <select id="inputTujuan" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5"></select>
+                                <button type="button" id="btnModalTujuan" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 rounded-lg text-sm" title="Kelola Tujuan">
+                                    <i class="fa-solid fa-gear"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Initial Status -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Status Awal</label>
+                        <select id="selectStatusAwal" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                            <option value="Belum Diterima Kantor">Belum Diterima Kantor</option>
+                            <option value="Diterima Kantor">Diterima Kantor</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Simpan Data SPB
+                    </button>
+                </form>
+            </div>
+
+            <!-- Rekap Chat Group Quick Copy -->
+            <div class="bg-amber-50 rounded-xl shadow-sm border border-amber-200 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-bold text-amber-900 flex items-center gap-2">
+                        <i class="fa-solid fa-copy text-amber-600"></i>
+                        Rekap Chat Group
+                    </h2>
+                    <span id="badgePendingCount" class="bg-amber-200 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full">0 Belum</span>
+                </div>
+                <p class="text-xs text-amber-700 mb-3">Rekap minimalis SPB yang **belum** diterima kantor untuk langsung dikirim/copas ke grup WhatsApp.</p>
+                
+                <textarea id="textRekap" readonly rows="6" class="w-full p-2.5 text-xs font-mono bg-white border border-amber-200 rounded-lg text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none" placeholder="Belum ada data pending..."></textarea>
+                
+                <button id="btnCopyRekap" class="mt-3 w-full bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg text-sm px-4 py-2 transition flex items-center justify-center gap-2">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Copas Teks Rekap</span>
+                </button>
+            </div>
+
+        </section>
+
+        <!-- Column 2: Data Tables & Updates (8 Cols) -->
+        <section class="lg:col-span-8 space-y-6">
+
+            <!-- Stats & Filter Bar -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex items-center space-x-1 border-b border-slate-200 text-sm">
+                    <button id="filterAll" class="px-4 py-2 active-tab transition flex items-center gap-2">
+                        <span>Semua Data</span>
+                        <span id="countAll" class="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button id="filterPending" class="px-4 py-2 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+                        <span>Belum Diterima</span>
+                        <span id="countPending" class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
+                    </button>
+                    <button id="filterDone" class="px-4 py-2 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+                        <span>Sudah Diterima</span>
+                        <span id="countDone" class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
+                    </button>
+                </div>
+
+                <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
+                    <input type="text" id="inputSearch" placeholder="Cari supir / no. SPB..." class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-300 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-slate-700 text-sm">Daftar Surat SPB Terdaftar</h3>
+                    <div class="text-xs text-slate-500">
+                        Klik status pada tabel untuk mengubah status secara cepat
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-100 text-slate-700 uppercase text-xs font-semibold">
+                            <tr>
+                                <th class="py-3 px-4">No</th>
+                                <th class="py-3 px-4">Nama Supir</th>
+                                <th class="py-3 px-4">No. Kontrak / DO</th>
+                                <th class="py-3 px-4">Rute (Asal - Tujuan)</th>
+                                <th class="py-3 px-4 text-center">Status Kantor</th>
+                                <th class="py-3 px-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100">
+                            <!-- Rows dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="hidden p-8 text-center text-slate-400">
+                    <i class="fa-regular fa-folder-open text-4xl mb-2"></i>
+                    <p class="text-sm">Tidak ada data SPB yang ditemukan.</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modal Tambah Supir Baru -->
+    <div id="modalSupir" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Tambah Supir Terdata Baru</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Lengkap Supir</label>
+                    <input type="text" id="inputNamaSupirBaru" placeholder="Masukkan nama supir..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div id="supirListManage" class="max-h-48 overflow-y-auto space-y-2 mb-3"></div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button id="btnCloseModalSupir" class="px-4 py-2 text-sm bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 font-medium">Tutup</button>
+                    <button id="btnSaveSupirBaru" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">Simpan Supir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal Kelola Master Data -->
+    <div id="modalMaster" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="masterTitle" class="text-lg font-bold text-slate-800">Kelola Data</h3>
+                <button id="btnCloseMaster" class="text-slate-400 hover:text-slate-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="inputMasterBaru" placeholder="Masukkan nama..." class="flex-1 bg-slate-50 border border-slate-300 text-sm rounded-lg p-2.5">
+                <button id="btnSaveMaster" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg text-sm font-medium">
+                    Tambah
+                </button>
+            </div>
+            <div id="masterList" class="max-h-64 overflow-y-auto space-y-2"></div>
+            <p class="text-[11px] text-slate-400 mt-3">Data yang dihapus tidak lagi muncul pada pilihan input baru.</p>
+        </div>
+    </div>
+
+    <!-- Modal Status / Settings Google Sheets -->
+    <div id="modalSettings" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Pengaturan Google Sheets</h3>
+            <p class="text-xs text-slate-500 mb-4">Website ini menggunakan Google Sheets sebagai database utama untuk SPB, Supir, Asal, dan Tujuan.</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Web App URL (Google Apps Script)</label>
+                    <input type="url" id="inputWebhookUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg p-2.5">
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-2">
+                    <p class="font-bold text-slate-700">Petunjuk Pemasangan Google Sheets:</p>
+                    <ol class="list-decimal pl-4 space-y-1">
+                        <li>Buka Google Sheets baru Anda.</li>
+                        <li>Klik menu <b>Ekstensi > Apps Script</b>.</li>
+                        <li>Hapus isi editor dan tempelkan kode Apps Script di bawah ini.</li>
+                        <li>Klik <b>Terapkan (Deploy) > Terapkan Baru (New deployment)</b>.</li>
+                        <li>Pilih Jenis: <b>Aplikasi Web (Web App)</b>.</li>
+                        <li>Set <i>Akses (Who has access)</i> ke: <b>Siapa Saja (Anyone)</b>.</li>
+                        <li>Salin Web App URL dan tempelkan pada kolom di atas.</li>
+                    </ol>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-slate-600 uppercase">Kode Google Apps Script</label>
+                        <button id="btnCopyScript" class="text-xs text-blue-600 hover:underline">Copy Script</button>
+                    </div>
+                    <textarea id="scriptCode" readonly rows="7" class="w-full p-2 text-[10px] font-mono bg-slate-800 text-emerald-400 rounded-lg resize-none">
+function doGet(e) {
+  try {
+    var action = e && e.parameter ? e.parameter.action : "getAll";
+
+    if (action === "getAll") {
+      return jsonResponse(getAllData());
+    }
+
+    return jsonResponse({
+      result: "error",
+      error: "Action tidak dikenal"
+    });
+  } catch (err) {
+    return jsonResponse({
+      result: "error",
+      error: err.toString()
+    });
+  }
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+
+    if (data.action === "saveSPB") {
+      return jsonResponse(saveSPB(data.item));
+    }
+
+    if (data.action === "updateSPB") {
+      return jsonResponse(updateSPB(data.item));
+    }
+
+    if (data.action === "deleteSPB") {
+      return jsonResponse(deleteSPB(data.id));
+    }
+
+    if (data.action === "saveSupir") {
+      return jsonResponse(saveMaster("Supir", data.nama));
+    }
+
+    if (data.action === "deleteSupir") {
+      return jsonResponse(deleteMaster("Supir", data.nama));
+    }
+
+    if (data.action === "saveAsal") {
+      return jsonResponse(saveMaster("Asal", data.nama));
+    }
+
+    if (data.action === "deleteAsal") {
+      return jsonResponse(deleteMaster("Asal", data.nama));
+    }
+
+    if (data.action === "saveTujuan") {
+      return jsonResponse(saveMaster("Tujuan", data.nama));
+    }
+
+    if (data.action === "deleteTujuan") {
+      return jsonResponse(deleteMaster("Tujuan", data.nama));
+    }
+
+    return jsonResponse({
+      result: "error",
+      error: "Action tidak dikenal"
+    });
+
+  } catch (err) {
+    return jsonResponse({
+      result: "error",
+      error: err.toString()
+    });
+  }
+}
+
+function setupSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  var spb = getOrCreateSheet(ss, "SPB", ["ID","Nama Supir","No Kontrak/DO","Asal","Tujuan","Status","Waktu Update"]);
+  var supir = getOrCreateSheet(ss, "Supir", ["Nama Supir"]);
+  var asal = getOrCreateSheet(ss, "Asal", ["Asal"]);
+  var tujuan = getOrCreateSheet(ss, "Tujuan", ["Tujuan"]);
+
+  return {
+    spb: spb,
+    supir: supir,
+    asal: asal,
+    tujuan: tujuan
+  };
+}
+
+function getOrCreateSheet(ss, name, headers) {
+  var sheet = ss.getSheetByName(name);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+  }
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+  }
+
+  return sheet;
+}
+
+function getAllData() {
+  var sheets = setupSheets();
+
+  return {
+    result: "success",
+    spbList: readSPB(sheets.spb),
+    supirList: readMaster(sheets.supir),
+    asalList: readMaster(sheets.asal),
+    tujuanList: readMaster(sheets.tujuan)
+  };
+}
+
+function readSPB(sheet) {
+  var result = [];
+
+  if (sheet.getLastRow() <= 1) return result;
+
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues();
+
+  values.forEach(function(row) {
+    if (!row[0]) return;
+
+    result.push({
+      id: String(row[0]),
+      supir: String(row[1] || ""),
+      noKontrak: String(row[2] || ""),
+      asal: String(row[3] || ""),
+      tujuan: String(row[4] || ""),
+      status: String(row[5] || "Belum Diterima Kantor"),
+      updatedAt: String(row[6] || "")
+    });
+  });
+
+  return result;
+}
+
+function readMaster(sheet) {
+  var result = [];
+
+  if (sheet.getLastRow() <= 1) return result;
+
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+
+  values.forEach(function(row) {
+    if (row[0]) result.push(String(row[0]));
+  });
+
+  return result;
+}
+
+function saveSPB(item) {
+  var sheets = setupSheets();
+  var sheet = sheets.spb;
+
+  if (!item || !item.id) {
+    return { result: "error", error: "Data SPB tidak valid" };
+  }
+
+  if (findRowById(sheet, item.id) !== -1) {
+    return { result: "error", error: "ID SPB sudah ada" };
+  }
+
+  sheet.appendRow([
+    item.id,
+    item.supir || "",
+    item.noKontrak || "",
+    item.asal || "",
+    item.tujuan || "",
+    item.status || "Belum Diterima Kantor",
+    item.updatedAt || new Date().toLocaleString("id-ID")
+  ]);
+
+  return { result: "success", message: "SPB berhasil disimpan" };
+}
+
+function updateSPB(item) {
+  var sheets = setupSheets();
+  var sheet = sheets.spb;
+  var row = findRowById(sheet, item.id);
+
+  if (row === -1) {
+    return { result: "error", error: "SPB tidak ditemukan" };
+  }
+
+  sheet.getRange(row, 1, 1, 7).setValues([[
+    item.id,
+    item.supir || "",
+    item.noKontrak || "",
+    item.asal || "",
+    item.tujuan || "",
+    item.status || "",
+    item.updatedAt || new Date().toLocaleString("id-ID")
+  ]]);
+
+  return { result: "success", message: "SPB berhasil diperbarui" };
+}
+
+function deleteSPB(id) {
+  var sheets = setupSheets();
+  var row = findRowById(sheets.spb, id);
+
+  if (row === -1) {
+    return { result: "error", error: "SPB tidak ditemukan" };
+  }
+
+  sheets.spb.deleteRow(row);
+
+  return { result: "success", message: "SPB berhasil dihapus" };
+}
+
+function saveMaster(type, nama) {
+  var sheets = setupSheets();
+  var map = {
+    Supir: sheets.supir,
+    Asal: sheets.asal,
+    Tujuan: sheets.tujuan
+  };
+
+  var sheet = map[type];
+  nama = String(nama || "").trim();
+
+  if (!sheet || !nama) {
+    return { result: "error", error: "Data tidak valid" };
+  }
+
+  var values = readMaster(sheet);
+
+  var exists = values.some(function(item) {
+    return item.toLowerCase() === nama.toLowerCase();
+  });
+
+  if (exists) {
+    return { result: "error", error: type + " sudah terdaftar" };
+  }
+
+  sheet.appendRow([nama]);
+
+  return {
+    result: "success",
+    message: type + " berhasil ditambahkan"
+  };
+}
+
+function deleteMaster(type, nama) {
+  var sheets = setupSheets();
+  var map = {
+    Supir: sheets.supir,
+    Asal: sheets.asal,
+    Tujuan: sheets.tujuan
+  };
+
+  var sheet = map[type];
+
+  if (!sheet) {
+    return { result: "error", error: "Master data tidak ditemukan" };
+  }
+
+  if (sheet.getLastRow() <= 1) {
+    return { result: "error", error: "Data tidak ditemukan" };
+  }
+
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][0]).toLowerCase() === String(nama).toLowerCase()) {
+      sheet.deleteRow(i + 2);
+      return {
+        result: "success",
+        message: type + " berhasil dihapus"
+      };
+    }
+  }
+
+  return {
+    result: "error",
+    error: type + " tidak ditemukan"
+  };
+}
+
+function findRowById(sheet, id) {
+  if (sheet.getLastRow() <= 1) return -1;
+
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][0]) === String(id)) {
+      return i + 2;
+    }
+  }
+
+  return -1;
+}
+
+function jsonResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}</textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button id="btnCloseSettings" class="px-4 py-2 text-sm bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 font-medium">Tutup</button>
+                    <button id="btnSaveSettings" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">Simpan URL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transition transform translate-y-20 opacity-0 z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toastMsg">Pesan Notifikasi</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // App State
+        let state = {
+            supirList: ['Anto', 'Melki', 'Budi', 'Joko'],
+            asalList: ['SBL'],
+            tujuanList: ['ASMJ', 'ISA'],
+            spbList: [
+                { id: '1', supir: 'Anto', noKontrak: '14/spb-sbl/2026', asal: 'SBL', tujuan: 'ASMJ', status: 'Belum Diterima Kantor', updatedAt: new Date().toLocaleString('id-ID') },
+                { id: '2', supir: 'Melki', noKontrak: '18/spb-sbl/2026', asal: 'SBL', tujuan: 'ISA', status: 'Belum Diterima Kantor', updatedAt: new Date().toLocaleString('id-ID') }
+            ],
+            currentFilter: 'ALL', // ALL, PENDING, DONE
+            searchQuery: '',
+            googleSheetUrl: 'https://script.google.com/macros/s/AKfycbx7oyrFS8PSscERm5Bgh6SLNc9jlZvCQrmd6o8pkWCpnFZlKrmzO2AJUe4U8T2ewZ8/exec'
+        };
+
+        // DOM Elements
+        const formSPB = document.getElementById('formSPB');
+        const selectSupir = document.getElementById('selectSupir');
+        const inputNoKontrak = document.getElementById('inputNoKontrak');
+        const inputAsal = document.getElementById('inputAsal');
+        const inputTujuan = document.getElementById('inputTujuan');
+        const btnModalAsal = document.getElementById('btnModalAsal');
+        const btnModalTujuan = document.getElementById('btnModalTujuan');
+        const modalMaster = document.getElementById('modalMaster');
+        const masterTitle = document.getElementById('masterTitle');
+        const inputMasterBaru = document.getElementById('inputMasterBaru');
+        const btnSaveMaster = document.getElementById('btnSaveMaster');
+        const masterList = document.getElementById('masterList');
+        const btnCloseMaster = document.getElementById('btnCloseMaster');
+        let masterType = 'asal';
+
+        const selectStatusAwal = document.getElementById('selectStatusAwal');
+        const tableBody = document.getElementById('tableBody');
+        const emptyState = document.getElementById('emptyState');
+        const textRekap = document.getElementById('textRekap');
+        const btnCopyRekap = document.getElementById('btnCopyRekap');
+        const inputSearch = document.getElementById('inputSearch');
+
+        // Modal Elements
+        const modalSupir = document.getElementById('modalSupir');
+        const btnModalSupir = document.getElementById('btnModalSupir');
+        const btnCloseModalSupir = document.getElementById('btnCloseModalSupir');
+        const btnSaveSupirBaru = document.getElementById('btnSaveSupirBaru');
+        const inputNamaSupirBaru = document.getElementById('inputNamaSupirBaru');
+
+        const modalSettings = document.getElementById('modalSettings');
+        const btnSettings = document.getElementById('btnSettings');
+        const btnCloseSettings = document.getElementById('btnCloseSettings');
+        const btnSaveSettings = document.getElementById('btnSaveSettings');
+        const inputWebhookUrl = document.getElementById('inputWebhookUrl');
+        const btnCopyScript = document.getElementById('btnCopyScript');
+
+        // Filter Buttons
+        const filterAll = document.getElementById('filterAll');
+        const filterPending = document.getElementById('filterPending');
+        const filterDone = document.getElementById('filterDone');
+
+        // Initial Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLocalStorage();
+            renderSupirDropdown();
+            renderMasterDropdowns();
+            renderTable();
+            renderRekap();
+            updateStats();
+            loadFromGoogleSheets();
+        });
+
+        // Local Storage Helpers
+        function saveLocalStorage() {
+            localStorage.setItem('spb_supir_list', JSON.stringify(state.supirList));
+            localStorage.setItem('spb_asal_list', JSON.stringify(state.asalList));
+            localStorage.setItem('spb_tujuan_list', JSON.stringify(state.tujuanList));
+            localStorage.setItem('spb_data_list', JSON.stringify(state.spbList));
+            localStorage.setItem('spb_sheet_url', state.googleSheetUrl);
+        }
+
+        function loadLocalStorage() {
+            const savedSupir = localStorage.getItem('spb_supir_list');
+            const savedSpb = localStorage.getItem('spb_data_list');
+            const savedAsal = localStorage.getItem('spb_asal_list');
+            const savedTujuan = localStorage.getItem('spb_tujuan_list');
+            const savedUrl = localStorage.getItem('spb_sheet_url') || 'https://script.google.com/macros/s/AKfycbx7oyrFS8PSscERm5Bgh6SLNc9jlZvCQrmd6o8pkWCpnFZlKrmzO2AJUe4U8T2ewZ8/exec';
+
+            if (savedSupir) state.supirList = JSON.parse(savedSupir);
+            if (savedSpb) state.spbList = JSON.parse(savedSpb);
+            if (savedAsal) state.asalList = JSON.parse(savedAsal);
+            if (savedTujuan) state.tujuanList = JSON.parse(savedTujuan);
+            if (savedUrl) {
+                state.googleSheetUrl = savedUrl;
+                inputWebhookUrl.value = savedUrl;
+            }
+        }
+
+        // Dropdown Supir Render
+        function renderSupirDropdown() {
+            selectSupir.innerHTML = '<option value="">-- Pilih Supir Terdata --</option>';
+            state.supirList.sort().forEach(nama => {
+                const opt = document.createElement('option');
+                opt.value = nama;
+                opt.textContent = nama;
+                selectSupir.appendChild(opt);
+            });
+        }
+
+
+        function renderMasterDropdowns() {
+            inputAsal.innerHTML = '<option value="">-- Pilih Asal --</option>';
+            [...new Set(state.asalList)].sort().forEach(nama => {
+                const opt = document.createElement('option');
+                opt.value = nama;
+                opt.textContent = nama;
+                inputAsal.appendChild(opt);
+            });
+
+            inputTujuan.innerHTML = '<option value="">-- Pilih Tujuan --</option>';
+            [...new Set(state.tujuanList)].sort().forEach(nama => {
+                const opt = document.createElement('option');
+                opt.value = nama;
+                opt.textContent = nama;
+                inputTujuan.appendChild(opt);
+            });
+        }
+
+        function openMaster(type) {
+            masterType = type;
+            masterTitle.textContent = type === 'asal' ? 'Kelola Asal' : 'Kelola Tujuan';
+            inputMasterBaru.placeholder = type === 'asal' ? 'Contoh: SBL' : 'Contoh: ASMJ';
+            inputMasterBaru.value = '';
+            renderMasterList();
+            modalMaster.classList.replace('hidden', 'flex');
+            inputMasterBaru.focus();
+        }
+
+        function renderMasterList() {
+            const list = masterType === 'asal' ? state.asalList : state.tujuanList;
+            masterList.innerHTML = '';
+
+            if (!list.length) {
+                masterList.innerHTML = '<div class="text-center text-xs text-slate-400 py-5">Belum ada data.</div>';
+                return;
+            }
+
+            [...new Set(list)].sort().forEach(nama => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2';
+                row.innerHTML = `
+                    <span class="text-sm font-medium text-slate-700">${escapeHtml(nama)}</span>
+                    <button type="button" class="text-slate-400 hover:text-red-600 p-1" title="Hapus">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                row.querySelector('button').addEventListener('click', () => deleteMaster(nama));
+                masterList.appendChild(row);
+            });
+        }
+
+        function deleteMaster(nama) {
+            const list = masterType === 'asal' ? state.asalList : state.tujuanList;
+            if (confirm(`Hapus ${masterType} "${nama}" dari daftar?`)) {
+                if (masterType === 'asal') {
+                    state.asalList = state.asalList.filter(x => x !== nama);
+                } else {
+                    state.tujuanList = state.tujuanList.filter(x => x !== nama);
+                }
+                saveLocalStorage();
+                renderMasterDropdowns();
+                renderMasterList();
+
+                cloudDeleteMaster(masterType, nama)
+                    .then(result => {
+                        if (result.result !== 'success') throw new Error(result.error || 'Gagal hapus');
+                        showToast(`${masterType === 'asal' ? 'Asal' : 'Tujuan'} ${nama} dihapus.`);
+                    })
+                    .catch(err => {
+                        if (masterType === 'asal') state.asalList.push(nama);
+                        else state.tujuanList.push(nama);
+                        saveLocalStorage();
+                        renderMasterDropdowns();
+                        renderMasterList();
+                        console.error(err);
+                        showToast(`Gagal menghapus ${masterType} dari Google Sheets.`);
+                    });
+            }
+        }
+
+        // Render SPB Table
+        function renderTable() {
+            tableBody.innerHTML = '';
+
+            let filtered = state.spbList.filter(item => {
+                const matchQuery = item.supir.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
+                                   item.noKontrak.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+                                   item.asal.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+                                   item.tujuan.toLowerCase().includes(state.searchQuery.toLowerCase());
+                
+                if (state.currentFilter === 'PENDING') return matchQuery && item.status === 'Belum Diterima Kantor';
+                if (state.currentFilter === 'DONE') return matchQuery && item.status === 'Diterima Kantor';
+                return matchQuery;
+            });
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                filtered.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+
+                    const isDone = item.status === 'Diterima Kantor';
+                    const badgeClass = isDone 
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200 border-green-300' 
+                        : 'bg-red-100 text-red-700 hover:bg-red-200 border-red-300';
+                    const iconClass = isDone ? 'fa-circle-check' : 'fa-clock';
+
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-xs font-semibold text-slate-400">${index + 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-800">${escapeHtml(item.supir)}</td>
+                        <td class="py-3 px-4 font-mono text-xs text-blue-700 font-semibold">${escapeHtml(item.noKontrak)}</td>
+                        <td class="py-3 px-4 text-xs">${escapeHtml(item.asal)} <i class="fa-solid fa-arrow-right text-[10px] text-slate-400 mx-1"></i> ${escapeHtml(item.tujuan)}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="toggleStatus('${item.id}')" class="px-2.5 py-1 text-xs font-semibold rounded-full border ${badgeClass} transition flex items-center gap-1.5 mx-auto">
+                                <i class="fa-solid ${iconClass}"></i>
+                                <span>${item.status}</span>
+                            </button>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="deleteSPB('${item.id}')" class="text-slate-400 hover:text-red-600 transition p-1" title="Hapus Data">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+        }
+
+        // Render Minimalist Chat Group Summary Text
+        function renderRekap() {
+            const pendingItems = state.spbList.filter(i => i.status === 'Belum Diterima Kantor');
+            document.getElementById('badgePendingCount').textContent = `${pendingItems.length} Belum`;
+
+            if (pendingItems.length === 0) {
+                textRekap.value = "Semua SPB sudah diterima kantor. Tidak ada rekap pending.";
+                return;
+            }
+
+            let text = `*REKAP SPB BELUM DITERIMA KANTOR*\n\n`;
+            pendingItems.forEach((item, idx) => {
+                text += `Nama : ${item.supir}\n`;
+                text += `no kontrak : ${item.noKontrak}\n`;
+                text += `asal dan tujuan : ${item.asal} - ${item.tujuan}\n`;
+                text += `Status : SPB belum di terima kantor\n`;
+                if (idx !== pendingItems.length - 1) text += `\n`;
+            });
+
+            textRekap.value = text;
+        }
+
+        // Update Statistics Counters
+        function updateStats() {
+            const total = state.spbList.length;
+            const pending = state.spbList.filter(i => i.status === 'Belum Diterima Kantor').length;
+            const done = state.spbList.filter(i => i.status === 'Diterima Kantor').length;
+
+            document.getElementById('countAll').textContent = total;
+            document.getElementById('countPending').textContent = pending;
+            document.getElementById('countDone').textContent = done;
+        }
+
+        // Toggle SPB Status
+        window.toggleStatus = function(id) {
+            const item = state.spbList.find(i => i.id === id);
+            if (item) {
+                item.status = item.status === 'Belum Diterima Kantor' ? 'Diterima Kantor' : 'Belum Diterima Kantor';
+                item.updatedAt = new Date().toLocaleString('id-ID');
+                saveLocalStorage();
+                renderTable();
+                renderRekap();
+                updateStats();
+
+                cloudUpdateSPB(item)
+                    .then(result => {
+                        if (result.result !== 'success') throw new Error(result.error || 'Gagal update');
+                        showToast(`Status SPB ${item.noKontrak} diperbaharui!`);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        showToast('Gagal menyimpan status ke Google Sheets.');
+                        loadFromGoogleSheets();
+                    });
+            }
+        };
+
+        // Delete SPB Record
+        window.deleteSPB = function(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus data SPB ini?")) {
+                const deleted = state.spbList.find(i => i.id === id);
+                state.spbList = state.spbList.filter(i => i.id !== id);
+                saveLocalStorage();
+                renderTable();
+                renderRekap();
+                updateStats();
+
+                cloudDeleteSPB(id)
+                    .then(result => {
+                        if (result.result !== 'success') throw new Error(result.error || 'Gagal hapus');
+                        showToast('Data SPB berhasil dihapus.');
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        if (deleted) state.spbList.unshift(deleted);
+                        saveLocalStorage();
+                        renderTable();
+                        renderRekap();
+                        updateStats();
+                        showToast('Gagal menghapus dari Google Sheets.');
+                    });
+            }
+        };
+
+        // Submit Form Input SPB
+        formSPB.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const supir = selectSupir.value;
+            const noKontrak = inputNoKontrak.value.trim();
+            const asal = inputAsal.value.trim();
+            const tujuan = inputTujuan.value.trim();
+            const status = selectStatusAwal.value;
+
+            if (!supir) {
+                alert('Silakan pilih nama supir!');
+                return;
+            }
+
+            const newSPB = {
+                id: Date.now().toString(),
+                supir,
+                noKontrak,
+                asal,
+                tujuan,
+                status,
+                updatedAt: new Date().toLocaleString('id-ID')
+            };
+
+            state.spbList.unshift(newSPB);
+            saveLocalStorage();
+            renderTable();
+            renderRekap();
+            updateStats();
+
+            cloudSaveSPB(newSPB)
+                .then(result => {
+                    if (result.result !== 'success') throw new Error(result.error || 'Gagal simpan');
+                    inputNoKontrak.value = '';
+                    inputAsal.value = '';
+                    inputTujuan.value = '';
+                    showToast('SPB Baru Berhasil Disimpan ke Google Sheets!');
+                })
+                .catch(err => {
+                    console.error(err);
+                    state.spbList = state.spbList.filter(i => i.id !== newSPB.id);
+                    saveLocalStorage();
+                    renderTable();
+                    renderRekap();
+                    updateStats();
+                    showToast('Gagal menyimpan SPB ke Google Sheets.');
+                });
+        });
+
+        // Supir Modal Handlers
+        btnModalSupir.addEventListener('click', () => { modalSupir.classList.replace('hidden', 'flex'); renderSupirManageList(); });
+        btnCloseModalSupir.addEventListener('click', () => modalSupir.classList.replace('flex', 'hidden'));
+
+        function renderSupirManageList() {
+            const box = document.getElementById('supirListManage');
+            box.innerHTML = '';
+            [...new Set(state.supirList)].sort().forEach(nama => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2';
+                row.innerHTML = `
+                    <span class="text-sm font-medium text-slate-700">${escapeHtml(nama)}</span>
+                    <button type="button" class="text-slate-400 hover:text-red-600 p-1" title="Hapus">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                row.querySelector('button').addEventListener('click', () => {
+                    if (confirm(`Hapus supir "${nama}" dari daftar?`)) {
+                        state.supirList = state.supirList.filter(x => x !== nama);
+                        saveLocalStorage();
+                        renderSupirDropdown();
+                        renderSupirManageList();
+
+                        cloudDeleteMaster('supir', nama)
+                            .then(result => {
+                                if (result.result !== 'success') throw new Error(result.error || 'Gagal hapus');
+                                showToast(`Supir ${nama} dihapus.`);
+                            })
+                            .catch(err => {
+                                state.supirList.push(nama);
+                                saveLocalStorage();
+                                renderSupirDropdown();
+                                renderSupirManageList();
+                                console.error(err);
+                                showToast('Gagal menghapus supir dari Google Sheets.');
+                            });
+                    }
+                });
+                box.appendChild(row);
+            });
+        }
+
+        btnSaveSupirBaru.addEventListener('click', () => {
+            const nama = inputNamaSupirBaru.value.trim();
+            if (nama) {
+                if (!state.supirList.includes(nama)) {
+                    state.supirList.push(nama);
+                    saveLocalStorage();
+                    renderSupirDropdown();
+                    selectSupir.value = nama;
+
+                    cloudSaveMaster('supir', nama)
+                        .then(result => {
+                            if (result.result !== 'success') throw new Error(result.error || 'Gagal simpan');
+                            inputNamaSupirBaru.value = '';
+                            renderSupirManageList();
+                            showToast(`Supir ${nama} berhasil disimpan ke Google Sheets!`);
+                        })
+                        .catch(err => {
+                            state.supirList = state.supirList.filter(x => x !== nama);
+                            saveLocalStorage();
+                            renderSupirDropdown();
+                            renderSupirManageList();
+                            console.error(err);
+                            showToast('Gagal menyimpan supir ke Google Sheets.');
+                        });
+                } else {
+                    alert('Nama supir sudah terdaftar dalam sistem!');
+                }
+            }
+        });
+
+        // Copy Rekap to Clipboard
+        btnCopyRekap.addEventListener('click', () => {
+            if (!textRekap.value || textRekap.value.includes("Tidak ada rekap")) return;
+            
+            // Clipboard API fallback
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textRekap.value);
+            } else {
+                textRekap.select();
+                document.execCommand('copy');
+            }
+            showToast('Teks Rekap berhasil dicopas! Tinggal Paste di WA Group.');
+        });
+
+        // Filters Tab Logic
+        filterAll.addEventListener('click', () => setFilter('ALL', filterAll));
+        filterPending.addEventListener('click', () => setFilter('PENDING', filterPending));
+        filterDone.addEventListener('click', () => setFilter('DONE', filterDone));
+
+        function setFilter(type, btnElement) {
+            state.currentFilter = type;
+            [filterAll, filterPending, filterDone].forEach(btn => {
+                btn.classList.remove('active-tab', 'text-blue-600', 'font-semibold');
+                btn.classList.add('text-slate-500');
+            });
+            btnElement.classList.add('active-tab', 'text-blue-600', 'font-semibold');
+            btnElement.classList.remove('text-slate-500');
+            renderTable();
+        }
+
+        // Live Search Input
+        inputSearch.addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            renderTable();
+        });
+
+
+        btnModalAsal.addEventListener('click', () => openMaster('asal'));
+        btnModalTujuan.addEventListener('click', () => openMaster('tujuan'));
+
+        btnCloseMaster.addEventListener('click', () => modalMaster.classList.replace('flex', 'hidden'));
+
+        btnSaveMaster.addEventListener('click', () => {
+            const nama = inputMasterBaru.value.trim();
+            if (!nama) {
+                alert('Silakan isi nama terlebih dahulu.');
+                return;
+            }
+
+            const target = masterType === 'asal' ? state.asalList : state.tujuanList;
+            if (target.some(x => x.toLowerCase() === nama.toLowerCase())) {
+                alert(`${masterType === 'asal' ? 'Asal' : 'Tujuan'} sudah terdaftar.`);
+                return;
+            }
+
+            target.push(nama);
+
+            saveLocalStorage();
+            renderMasterDropdowns();
+            renderMasterList();
+
+            cloudSaveMaster(masterType, nama)
+                .then(result => {
+                    if (result.result !== 'success') throw new Error(result.error || 'Gagal simpan');
+                    if (masterType === 'asal') inputAsal.value = nama;
+                    else inputTujuan.value = nama;
+                    inputMasterBaru.value = '';
+                    showToast(`${masterType === 'asal' ? 'Asal' : 'Tujuan'} ${nama} berhasil disimpan ke Google Sheets.`);
+                })
+                .catch(err => {
+                    if (masterType === 'asal') {
+                        state.asalList = state.asalList.filter(x => x !== nama);
+                    } else {
+                        state.tujuanList = state.tujuanList.filter(x => x !== nama);
+                    }
+                    saveLocalStorage();
+                    renderMasterDropdowns();
+                    renderMasterList();
+                    console.error(err);
+                    showToast(`Gagal menyimpan ${masterType} ke Google Sheets.`);
+                });
+        });
+
+        // Settings / Google Sheets Modal
+        btnSettings.addEventListener('click', () => modalSettings.classList.replace('hidden', 'flex'));
+        btnCloseSettings.addEventListener('click', () => modalSettings.classList.replace('flex', 'hidden'));
+
+        btnSaveSettings.addEventListener('click', () => {
+            state.googleSheetUrl = inputWebhookUrl.value.trim();
+            saveLocalStorage();
+            modalSettings.classList.replace('flex', 'hidden');
+            showToast('URL Google Sheets disimpan & disinkronkan!');
+        });
+
+        btnCopyScript.addEventListener('click', () => {
+            const script = document.getElementById('scriptCode').value;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(script);
+            } else {
+                document.getElementById('scriptCode').select();
+                document.execCommand('copy');
+            }
+            showToast('Google Apps Script disalin ke Clipboard!');
+        });
+
+        // Google Sheets Integration
+        async function loadFromGoogleSheets() {
+            if (!state.googleSheetUrl) return;
+
+            try {
+                const response = await fetch(state.googleSheetUrl + '?action=getAll&ts=' + Date.now());
+                const data = await response.json();
+
+                if (data.result !== 'success') throw new Error(data.error || 'Gagal membaca database');
+
+                state.spbList = Array.isArray(data.spbList) ? data.spbList : [];
+                state.supirList = Array.isArray(data.supirList) ? data.supirList : [];
+                state.asalList = Array.isArray(data.asalList) ? data.asalList : [];
+                state.tujuanList = Array.isArray(data.tujuanList) ? data.tujuanList : [];
+
+                saveLocalStorage();
+                renderSupirDropdown();
+                renderMasterDropdowns();
+                renderTable();
+                renderRekap();
+                updateStats();
+
+                showToast('Data Google Sheets berhasil dimuat.');
+            } catch (err) {
+                console.error('Load Sheets:', err);
+                showToast('Gagal mengambil data Google Sheets.');
+            }
+        }
+
+        async function postToGoogleSheets(action, payload) {
+            if (!state.googleSheetUrl) {
+                throw new Error('URL Google Sheets belum disetel.');
+            }
+
+            const response = await fetch(state.googleSheetUrl, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+            });
+
+            return await response.json();
+        }
+
+        async function cloudSaveSPB(item) {
+            return postToGoogleSheets('saveSPB', { item: item });
+        }
+
+        async function cloudUpdateSPB(item) {
+            return postToGoogleSheets('updateSPB', { item: item });
+        }
+
+        async function cloudDeleteSPB(id) {
+            return postToGoogleSheets('deleteSPB', { id: id });
+        }
+
+        async function cloudSaveMaster(type, nama) {
+            const action = type === 'asal' ? 'saveAsal' :
+                           type === 'tujuan' ? 'saveTujuan' : 'saveSupir';
+
+            return postToGoogleSheets(action, { nama: nama });
+        }
+
+        async function cloudDeleteMaster(type, nama) {
+            const action = type === 'asal' ? 'deleteAsal' :
+                           type === 'tujuan' ? 'deleteTujuan' : 'deleteSupir';
+
+            return postToGoogleSheets(action, { nama: nama });
+        }
+
+        // Toast Notification Helper
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.textContent = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Escape HTML
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+    </script>
+</body>
+</html>
