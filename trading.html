@@ -1,1 +1,363 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTC Advanced Candle Bias</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .container { max-width: 540px; margin: 0 auto; }
+    h1 { text-align: center; font-size: 1.35rem; margin-bottom: 4px; }
+    .sub { text-align: center; font-size: 0.78rem; color: #94a3b8; margin-bottom: 16px; }
 
+    .card {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      border: 1px solid #334155;
+    }
+
+    .price { font-size: 1.9rem; font-weight: 700; text-align: center; }
+    .change { text-align: center; font-size: 0.9rem; margin: 4px 0 12px; }
+    .up { color: #22c55e; }
+    .down { color: #ef4444; }
+    .side { color: #eab308; }
+
+    .control {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    select, button {
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    select {
+      flex: 1;
+      background: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid #475569;
+    }
+    .btn {
+      background: #3b82f6;
+      color: white;
+      min-width: 100px;
+    }
+    .btn:hover { background: #2563eb; }
+
+    .result {
+      text-align: center;
+      padding: 14px;
+      border-radius: 12px;
+      background: #0f172a;
+    }
+    .result .label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; }
+    .result .bias { font-size: 1.7rem; font-weight: 700; }
+    .result .meta { font-size: 0.8rem; color: #94a3b8; margin-top: 6px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .stat {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .stat .num { font-size: 1rem; font-weight: 700; }
+    .stat .lbl { font-size: 0.7rem; color: #94a3b8; }
+
+    .reason {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-top: 12px;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    th, td { padding: 6px 4px; text-align: right; }
+    th { color: #94a3b8; border-bottom: 1px solid #334155; font-weight: 500; }
+    td:first-child, th:first-child { text-align: left; }
+
+    .green { color: #22c55e; }
+    .red { color: #ef4444; }
+
+    .status {
+      text-align: center;
+      font-size: 0.72rem;
+      color: #64748b;
+      margin-top: 12px;
+    }
+
+    .warning {
+      background: #451a03;
+      border: 1px solid #92400e;
+      color: #fdba74;
+      font-size: 0.75rem;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BTC Advanced Bias Bot</h1>
+    <p class="sub">Maksimal 1000 candle • Analisa lebih dalam</p>
+
+    <div class="warning">
+      ⚠️ Tetap ingat: ini hanya <b>bias teknikal</b>, bukan prediksi pasti. Semakin banyak data semakin baik, tapi pasar tetap bisa bergerak random.
+    </div>
+
+    <div class="card">
+      <div class="price" id="price">Loading...</div>
+      <div class="change" id="change24">—</div>
+
+      <div class="control">
+        <select id="timeframe">
+          <option value="1m">1 Menit</option>
+          <option value="3m">3 Menit</option>
+          <option value="5m" selected>5 Menit</option>
+          <option value="15m">15 Menit</option>
+          <option value="30m">30 Menit</option>
+          <option value="1h">1 Jam</option>
+          <option value="2h">2 Jam</option>
+          <option value="4h">4 Jam</option>
+          <option value="1d">1 Hari</option>
+        </select>
+        <button class="btn" onclick="analyze()">Analisis</button>
+      </div>
+
+      <div class="result">
+        <div class="label">Bias untuk timeframe yang dipilih</div>
+        <div class="bias" id="biasText">—</div>
+        <div class="meta" id="strengthText">—</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="num" id="greenRatio">—</div>
+          <div class="lbl">Candle Hijau</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="momentum">—</div>
+          <div class="lbl">Momentum</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="candleCount">—</div>
+          <div class="lbl">Total Candle</div>
+        </div>
+      </div>
+
+      <div class="reason" id="reason">Pilih timeframe lalu klik Analisis</div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:0.82rem; margin-bottom:8px; color:#94a3b8;" id="candleTitle">
+        10 Candle Terbaru
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Open</th>
+            <th>Close</th>
+            <th>Body</th>
+          </tr>
+        </thead>
+        <tbody id="candles"></tbody>
+      </table>
+    </div>
+
+    <p class="status" id="status">Siap digunakan</p>
+  </div>
+
+  <script>
+    async function analyze() {
+      const interval = document.getElementById('timeframe').value;
+      const intervalText = document.getElementById('timeframe').selectedOptions[0].text;
+
+      try {
+        document.getElementById('status').textContent = `Mengambil maksimal 1000 candle ${intervalText}...`;
+        document.getElementById('candleTitle').textContent = `10 Candle Terbaru (${intervalText})`;
+
+        // Harga
+        const ticker = await (await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT')).json();
+        const price = parseFloat(ticker.lastPrice);
+        const change24 = parseFloat(ticker.priceChangePercent);
+
+        document.getElementById('price').textContent = '$' + price.toLocaleString('en-US', {minimumFractionDigits: 2});
+        const changeEl = document.getElementById('change24');
+        changeEl.textContent = (change24 >= 0 ? '+' : '') + change24.toFixed(2) + '% (24 jam)';
+        changeEl.className = 'change ' + (change24 >= 0 ? 'up' : 'down');
+
+        // Ambil maksimal 1000 candle
+        const klines = await (await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=1000`)).json();
+
+        const candles = klines.map(k => ({
+          time: new Date(k[0]).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}),
+          open: +k[1],
+          high: +k[2],
+          low: +k[3],
+          close: +k[4],
+          body: +k[4] - +k[1],
+          isGreen: +k[4] >= +k[1]
+        }));
+
+        const total = candles.length;
+        document.getElementById('candleCount').textContent = total;
+
+        // Tampilkan 10 candle terbaru saja
+        const tbody = document.getElementById('candles');
+        tbody.innerHTML = '';
+        [...candles].reverse().slice(0, 10).forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${c.time}</td>
+            <td>${c.open.toFixed(1)}</td>
+            <td class="\( {c.isGreen ? 'green' : 'red'}"> \){c.close.toFixed(1)}</td>
+            <td class="\( {c.isGreen ? 'green' : 'red'}"> \){c.body > 0 ? '+' : ''}${c.body.toFixed(1)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // ========== ANALISA LEBIH DALAM ==========
+        const last = candles[total - 1];
+        const prev = candles[total - 2];
+
+        // 1. Rasio hijau vs merah (seluruh data)
+        let greenTotal = 0;
+        candles.forEach(c => { if (c.isGreen) greenTotal++; });
+        const greenPct = (greenTotal / total * 100).toFixed(1);
+        document.getElementById('greenRatio').textContent = greenPct + '%';
+
+        // 2. Momentum jangka pendek (20 candle terakhir)
+        const short = candles.slice(-20);
+        let shortGreen = 0;
+        let shortBody = 0;
+        short.forEach(c => {
+          if (c.isGreen) shortGreen++;
+          shortBody += c.body;
+        });
+
+        // 3. Momentum menengah (100 candle terakhir)
+        const mid = candles.slice(-100);
+        let midGreen = 0;
+        let midBody = 0;
+        mid.forEach(c => {
+          if (c.isGreen) midGreen++;
+          midBody += c.body;
+        });
+
+        // 4. Consecutive candle
+        let consecutive = 1;
+        for (let i = total - 2; i >= 0; i--) {
+          if (candles[i].isGreen === last.isGreen) consecutive++;
+          else break;
+        }
+
+        // Scoring
+        let score = 0;
+
+        // Candle terakhir
+        if (last.isGreen) score += 1.8;
+        else score -= 1.8;
+
+        // Consecutive
+        if (consecutive >= 3 && last.isGreen) score += 1.2;
+        if (consecutive >= 3 && !last.isGreen) score -= 1.2;
+
+        // Short momentum (20 candle)
+        if (shortGreen >= 13) score += 1.4;
+        if (shortGreen <= 7) score -= 1.4;
+        if (shortBody > 0) score += 0.6;
+        else score -= 0.6;
+
+        // Mid momentum (100 candle)
+        if (midGreen >= 58) score += 1.0;
+        if (midGreen <= 42) score -= 1.0;
+
+        // Overall bias
+        if (greenPct > 53) score += 0.7;
+        if (greenPct < 47) score -= 0.7;
+
+        // Close vs previous
+        if (last.close > prev.close) score += 0.5;
+        else score -= 0.5;
+
+        // Hasil akhir
+        let biasText, biasClass, strength;
+
+        if (score >= 3.2) {
+          biasText = 'NAIK';
+          biasClass = 'up';
+        } else if (score <= -3.2) {
+          biasText = 'TURUN';
+          biasClass = 'down';
+        } else {
+          biasText = 'SIDEWAYS';
+          biasClass = 'side';
+        }
+
+        if (Math.abs(score) >= 5) strength = 'Sangat Kuat';
+        else if (Math.abs(score) >= 3.5) strength = 'Kuat';
+        else if (Math.abs(score) >= 2.2) strength = 'Sedang';
+        else strength = 'Lemah';
+
+        // Momentum text
+        let momText = 'Netral';
+        if (shortBody > 30) momText = 'Bullish';
+        else if (shortBody < -30) momText = 'Bearish';
+        document.getElementById('momentum').textContent = momText;
+        document.getElementById('momentum').className = 'num ' + (momText === 'Bullish' ? 'up' : momText === 'Bearish' ? 'down' : 'side');
+
+        // Update UI
+        const biasEl = document.getElementById('biasText');
+        biasEl.textContent = biasText;
+        biasEl.className = 'bias ' + biasClass;
+
+        document.getElementById('strengthText').textContent = `Kekuatan: ${strength} • Score: ${score.toFixed(1)}`;
+
+        // Alasan
+        const reasons = [];
+        reasons.push(`Memakai ${total} candle`);
+        reasons.push(`Hijau keseluruhan: ${greenPct}%`);
+        reasons.push(`${shortGreen}/20 candle terakhir hijau`);
+        if (consecutive >= 3) reasons.push(`${consecutive} candle beruntun ${last.isGreen ? 'hijau' : 'merah'}`);
+        if (last.isGreen) reasons.push('Candle terakhir hijau');
+        else reasons.push('Candle terakhir merah');
+
+        document.getElementById('reason').textContent = 'Alasan: ' + reasons.join(' • ');
+        document.getElementById('status').textContent = 
+          `Update: ${new Date().toLocaleTimeString('id-ID')} • ${total} candle dimuat dari Binance`;
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status').textContent = 'Gagal mengambil data. Coba lagi.';
+      }
+    }
+
+    analyze();
+  </script>
+</body>
+</html>
