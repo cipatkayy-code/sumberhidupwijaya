@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rollingan Angkutan - Adil & Merata</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar / Header -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2.5 rounded-xl shadow-inner">
+                    <i class="fa-solid fa-truck-fast text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight">Sistem Rollingan Angkutan</h1>
+                    <p class="text-xs text-slate-400">Distribusi Muatan Adil, Merata & Otomatis</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <span id="syncStatus" class="text-xs bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check"></i> <span>Database Lokal Siap</span>
+                </span>
+                <button type="button" onclick="refreshFromCloud()" id="btnRefresh" class="hidden text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5" title="Muat Ulang Data dari Google Sheet">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+                <button type="button" onclick="openApiModal()" class="text-xs bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-3 py-1.5 rounded-lg border border-blue-500/40 transition flex items-center gap-1.5" title="Hubungkan URL Google Apps Script">
+                    <i class="fa-solid fa-link"></i> <span>URL API</span>
+                </button>
+                <button type="button" onclick="openResetModal()" class="text-xs bg-slate-800 hover:bg-red-900/60 text-slate-300 hover:text-red-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5" title="Reset Data">
+                    <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline">Reset</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Notifikasi Toast Container -->
+        <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+        <!-- Section 1: Rekomendasi Giliran Berikutnya (Kartu Aksi Cepat) -->
+        <section>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i>
+                        Rekomendasi Giliran Muat Berikutnya
+                    </h2>
+                    <span class="text-xs text-slate-500">Klik <b>"Pilih & Tugaskan"</b> untuk mencatat muatan, atau <b>"Skip"</b> untuk melewati sementara</span>
+                </div>
+                <button type="button" onclick="openAddRouteModal()" class="self-start sm:self-auto bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-location-dot text-blue-400"></i> + Tambah Tujuan Baru
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="recommendationCards">
+                <!-- Kartu rekomendasi dirender otomatis oleh JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 2: Tabs Navigasi (Database Supir & Riwayat Perjalanan) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-4 sm:px-6 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+                <div class="flex space-x-2">
+                    <button type="button" onclick="switchTab('drivers')" id="tab-drivers" class="tab-btn px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 border-blue-600 text-blue-600 bg-white transition">
+                        <i class="fa-solid fa-users mr-1.5"></i> Database Supir & Status (<span id="driverCount">10</span>)
+                    </button>
+                    <button type="button" onclick="switchTab('history')" id="tab-history" class="tab-btn px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition">
+                        <i class="fa-solid fa-clock-rotate-left mr-1.5"></i> Riwayat Muatan (<span id="historyCount">0</span>)
+                    </button>
+                </div>
+
+                <div class="pb-3 sm:pb-2 flex items-center gap-2">
+                    <button type="button" onclick="openManualAssignModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> Input Muatan Manual
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content 1: Database Supir -->
+            <div id="view-drivers" class="p-4 sm:p-6">
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-3.5 mb-5 flex items-start gap-3 text-xs sm:text-sm text-blue-800">
+                    <i class="fa-solid fa-circle-info text-blue-600 mt-0.5 text-base"></i>
+                    <div>
+                        <p class="font-semibold">Cara Kerja Keadilan, Skip & Kompensasi Terlewati:</p>
+                        <p class="text-blue-700 mt-0.5 leading-relaxed">
+                            Setiap tujuan dihitung terpisah agar adil. Jika status supir diubah menjadi <b>Sakit</b> atau <b>Perbaikan</b>, sistem otomatis melewatkannya dan memprioritaskannya kembali saat status sudah <b>Siap Muat</b>. Tombol <b>Skip</b> melewati supir sementara tanpa menambah hitungan muatannya.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead id="driverTableHead"></thead>
+                        <tbody id="driverTableBody" class="divide-y divide-slate-200 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Riwayat Muatan -->
+            <div id="view-history" class="p-4 sm:p-6 hidden">
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3 px-4 font-semibold">Waktu Input</th>
+                                <th class="py-3 px-4 font-semibold">Nama Supir</th>
+                                <th class="py-3 px-4 font-semibold">Plat Nomor</th>
+                                <th class="py-3 px-4 font-semibold">Tujuan Muatan</th>
+                                <th class="py-3 px-4 font-semibold text-right">Jarak</th>
+                                <th class="py-3 px-4 font-semibold text-center">Keterangan</th>
+                                <th class="py-3 px-4 font-semibold text-center">Hapus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="divide-y divide-slate-200 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Tugaskan Muatan -->
+    <div id="assignModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden transform transition-all">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-lg">Konfirmasi Penugasan Muatan</h3>
+                <button type="button" onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Pilih Supir</label>
+                    <select id="modalDriverSelect" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"></select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Tujuan Muatan</label>
+                    <select id="modalRouteSelect" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"></select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Catatan Tambahan (Opsional)</label>
+                    <input type="text" id="modalNoteInput" placeholder="Contoh: Muatan pagi / Pengganti supir sakit" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div id="modalWarningBox" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                    <span id="modalWarningText"></span>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <button type="button" onclick="closeAssignModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200 transition">Batal</button>
+                <button type="button" onclick="confirmAssignment()" class="px-5 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-check"></i> Simpan & Tugaskan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tambah Tujuan Baru -->
+    <div id="addRouteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden transform transition-all">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-map-pin text-blue-600"></i> Tambah Tujuan Muatan Baru
+                </h3>
+                <button type="button" onclick="closeAddRouteModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nama Tujuan / Rute *</label>
+                    <input type="text" id="newRouteName" placeholder="Contoh: TLK - DUMAI / PKU" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none uppercase">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Jarak (KM)</label>
+                        <input type="number" id="newRouteDistance" value="0" min="0" placeholder="0" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Warna Kartu</label>
+                        <select id="newRouteColor" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="emerald">Hijau (Emerald)</option>
+                            <option value="purple">Ungu (Purple)</option>
+                            <option value="rose">Merah (Rose)</option>
+                            <option value="cyan">Biru Muda (Cyan)</option>
+                            <option value="indigo">Biru Tua (Indigo)</option>
+                            <option value="amber">Oranye (Amber)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Keterangan Singkat (Opsional)</label>
+                    <input type="text" id="newRouteDesc" placeholder="Kosongkan untuk otomatis dari jarak KM" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <button type="button" onclick="closeAddRouteModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200 transition">Batal</button>
+                <button type="button" onclick="saveNewRoute()" class="px-5 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Tambahkan Tujuan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Pengaturan URL API Google Apps Script -->
+    <div id="apiModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i> Koneksi Google Apps Script
+                </h3>
+                <button type="button" onclick="closeApiModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Tempelkan <b>URL Web App</b> dari Google Apps Script Anda (berakhiran <code>/exec</code>) agar data tersimpan online ke Google Sheets dari hosting ini.
+                </p>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">URL Web App Google Apps Script</label>
+                    <input type="url" id="gasApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2">
+                <div class="flex gap-2 items-center">
+                    <button type="button" onclick="clearApiUrl()" class="text-xs font-medium text-red-600 hover:underline">Putuskan</button>
+                    <button type="button" onclick="testWriteToSheet()" class="text-xs font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1.5 rounded-lg transition">Tes Simpan</button>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeApiModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200 transition">Batal</button>
+                    <button type="button" onclick="saveApiUrl()" class="px-5 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition">Simpan & Muat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Reset Konfirmasi -->
+    <div id="resetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-lg">Reset Semua Data Rollingan?</h3>
+            <p class="text-sm text-slate-500">Semua riwayat perjalanan dan hitungan giliran akan dikembalikan ke 0, dan semua status supir menjadi Siap Muat.</p>
+            <div class="flex justify-center gap-3 pt-2">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Batal</button>
+                <button type="button" onclick="executeReset()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition">Ya, Reset Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. KONFIGURASI & DATA MASTER SUPIR
+        // ==========================================
+        
+        // OPSIONAL: Tempelkan URL Web App Google Apps Script Anda di bawah ini agar otomatis terhubung tanpa setting manual di browser:
+        const DEFAULT_GAS_API_URL = '';
+
+        const INITIAL_DRIVERS = [
+            { id: 1, name: "FRANSISKUS JARIANDO A", plate: "BM 9822 DA", sim: "0914-7504-000483", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 2, name: "ANTO MARBUN", plate: "BM 8899 HJ", sim: "1471091909830062", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 3, name: "AHMAD JHONI NAINGGOLAN", plate: "BM 8331 AU", sim: "1277051703750001", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 4, name: "MELKI", plate: "BM 8899 JL", sim: "1208011511870001", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 5, name: "HURMAN AMBARITA", plate: "BM 9516 ML", sim: "1471092205830022", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 6, name: "ALEK SILABAN", plate: "BM 9823 DA", sim: "1471062506810065", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 7, name: "MISWARDI", plate: "BM 9409 DF", sim: "1303070101850001", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 8, name: "MARIO MIKKO BARUS", plate: "BM 8588 WH", sim: "1207211612990006", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 9, name: "SEKJAN H. SIRAIT", plate: "BM 8988 MM", sim: "0718-8302-000172", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
+            { id: 10, name: "IRMAN SYAHPUTRA SITORUS", plate: "BM 9821 DA", sim: "0914-9610-000572", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } }
+        ];
+
+        const INITIAL_ROUTES = [
+            { key: 'IBP_WINA', name: 'TLK - IBP, WINA', distance: 400, badgeColor: 'indigo', desc: 'Jarak Jauh (400 KM)', isDefault: true },
+            { key: 'ASMJ', name: 'TLK - ASMJ', distance: 60, badgeColor: 'teal', desc: 'Jarak Dekat (60 KM)', isDefault: true },
+            { key: 'PENGAPALAN', name: 'PENGAPALAN', distance: 0, badgeColor: 'amber', desc: 'Muatan Wajib Rollingan', isDefault: true }
+        ];
+
+        const COLOR_STYLES = {
+            indigo: { border: 'border-indigo-200', headerBg: 'bg-indigo-600', lightBg: 'bg-indigo-50', text: 'text-indigo-700', btn: 'bg-indigo-600 hover:bg-indigo-700', thBg: 'bg-indigo-50/60 text-indigo-900', thSub: 'text-indigo-600', tdBg: 'bg-indigo-50/30', badge: 'bg-indigo-100/80 text-indigo-700', histBadge: 'bg-indigo-100 text-indigo-800' },
+            teal: { border: 'border-teal-200', headerBg: 'bg-teal-600', lightBg: 'bg-teal-50', text: 'text-teal-700', btn: 'bg-teal-600 hover:bg-teal-700', thBg: 'bg-teal-50/60 text-teal-900', thSub: 'text-teal-600', tdBg: 'bg-teal-50/30', badge: 'bg-teal-100/80 text-teal-700', histBadge: 'bg-teal-100 text-teal-800' },
+            amber: { border: 'border-amber-200', headerBg: 'bg-amber-600', lightBg: 'bg-amber-50', text: 'text-amber-700', btn: 'bg-amber-600 hover:bg-amber-700', thBg: 'bg-amber-50/60 text-amber-900', thSub: 'text-amber-600', tdBg: 'bg-amber-50/30', badge: 'bg-amber-100/80 text-amber-700', histBadge: 'bg-amber-100 text-amber-800' },
+            emerald: { border: 'border-emerald-200', headerBg: 'bg-emerald-600', lightBg: 'bg-emerald-50', text: 'text-emerald-700', btn: 'bg-emerald-600 hover:bg-emerald-700', thBg: 'bg-emerald-50/60 text-emerald-900', thSub: 'text-emerald-600', tdBg: 'bg-emerald-50/30', badge: 'bg-emerald-100/80 text-emerald-700', histBadge: 'bg-emerald-100 text-emerald-800' },
+            purple: { border: 'border-purple-200', headerBg: 'bg-purple-600', lightBg: 'bg-purple-50', text: 'text-purple-700', btn: 'bg-purple-600 hover:bg-purple-700', thBg: 'bg-purple-50/60 text-purple-900', thSub: 'text-purple-600', tdBg: 'bg-purple-50/30', badge: 'bg-purple-100/80 text-purple-700', histBadge: 'bg-purple-100 text-purple-800' },
+            rose: { border: 'border-rose-200', headerBg: 'bg-rose-600', lightBg: 'bg-rose-50', text: 'text-rose-700', btn: 'bg-rose-600 hover:bg-rose-700', thBg: 'bg-rose-50/60 text-rose-900', thSub: 'text-rose-600', tdBg: 'bg-rose-50/30', badge: 'bg-rose-100/80 text-rose-700', histBadge: 'bg-rose-100 text-rose-800' },
+            cyan: { border: 'border-cyan-200', headerBg: 'bg-cyan-600', lightBg: 'bg-cyan-50', text: 'text-cyan-700', btn: 'bg-cyan-600 hover:bg-cyan-700', thBg: 'bg-cyan-50/60 text-cyan-900', thSub: 'text-cyan-600', tdBg: 'bg-cyan-50/30', badge: 'bg-cyan-100/80 text-cyan-700', histBadge: 'bg-cyan-100 text-cyan-800' }
+        };
+
+        let drivers = [];
+        let routes = [];
+        let history = [];
+        const STORAGE_KEY_DRIVERS = 'rollingan_drivers_v5';
+        const STORAGE_KEY_ROUTES = 'rollingan_routes_v5';
+        const STORAGE_KEY_HISTORY = 'rollingan_history_v5';
+        const STORAGE_KEY_API_URL = 'rollingan_gas_api_url';
+
+        function getGasApiUrl() {
+            try {
+                return localStorage.getItem(STORAGE_KEY_API_URL) || DEFAULT_GAS_API_URL;
+            } catch (e) {
+                return DEFAULT_GAS_API_URL;
+            }
+        }
+
+        // ==========================================
+        // 2. INISIALISASI & PENYIMPANAN DATA
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+
+        function normalizeDriverStructures() {
+            drivers.forEach(d => {
+                if (!d.counts || typeof d.counts !== 'object') d.counts = {};
+                if (!d.lastAssigned || typeof d.lastAssigned !== 'object') d.lastAssigned = {};
+                if (!d.skipped || typeof d.skipped !== 'object') d.skipped = {};
+                routes.forEach(r => {
+                    if (typeof d.counts[r.key] !== 'number') d.counts[r.key] = 0;
+                    if (typeof d.lastAssigned[r.key] !== 'number') d.lastAssigned[r.key] = 0;
+                    if (typeof d.skipped[r.key] !== 'number') d.skipped[r.key] = 0;
+                });
+            });
+        }
+
+        async function loadData() {
+            const apiUrl = getGasApiUrl();
+            const btnRefresh = document.getElementById('btnRefresh');
+
+            if (apiUrl) {
+                if (btnRefresh) btnRefresh.classList.remove('hidden');
+                updateSyncStatus('Memuat Google Sheet...', 'text-amber-400');
+                try {
+                    const separator = apiUrl.includes('?') ? '&' : '?';
+                    const res = await fetch(`${apiUrl}${separator}t=${Date.now()}`, {
+                        method: 'GET',
+                        redirect: 'follow',
+                        cache: 'no-store'
+                    });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const response = await res.json();
+
+                    if (response && Array.isArray(response.drivers) && response.drivers.length > 0) {
+                        drivers = response.drivers;
+                        routes = (Array.isArray(response.routes) && response.routes.length > 0)
+                            ? response.routes
+                            : JSON.parse(JSON.stringify(INITIAL_ROUTES));
+                        history = Array.isArray(response.history) ? response.history : [];
+                        normalizeDriverStructures();
+                        saveLocalOnly();
+                    } else {
+                        drivers = JSON.parse(JSON.stringify(INITIAL_DRIVERS));
+                        routes = JSON.parse(JSON.stringify(INITIAL_ROUTES));
+                        history = [];
+                        normalizeDriverStructures();
+                        await saveData();
+                    }
+                    updateSyncStatus('Terhubung Google Sheet', 'text-emerald-400');
+                    renderAll();
+                    return;
+                } catch (err) {
+                    console.error('Gagal memuat dari Google Apps Script:', err);
+                    updateSyncStatus('Offline (Mode Lokal)', 'text-amber-400');
+                    showToast('Gagal terhubung ke Google Sheet, beralih ke data lokal sementara.', 'warning');
+                }
+            } else {
+                if (btnRefresh) btnRefresh.classList.add('hidden');
+            }
+            loadLocalFallback();
+        }
+
+        function refreshFromCloud() {
+            loadData();
+            showToast('Menyegarkan data dari Google Sheet...', 'info');
+        }
+
+        function loadLocalFallback() {
+            try {
+                const savedDrivers = localStorage.getItem(STORAGE_KEY_DRIVERS);
+                const savedRoutes = localStorage.getItem(STORAGE_KEY_ROUTES);
+                const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
+
+                routes = savedRoutes ? JSON.parse(savedRoutes) : JSON.parse(JSON.stringify(INITIAL_ROUTES));
+                drivers = savedDrivers ? JSON.parse(savedDrivers) : JSON.parse(JSON.stringify(INITIAL_DRIVERS));
+                history = savedHistory ? JSON.parse(savedHistory) : [];
+            } catch (e) {
+                routes = JSON.parse(JSON.stringify(INITIAL_ROUTES));
+                drivers = JSON.parse(JSON.stringify(INITIAL_DRIVERS));
+                history = [];
+            }
+            
+            normalizeDriverStructures();
+            renderAll();
+        }
+
+        function saveLocalOnly() {
+            try {
+                localStorage.setItem(STORAGE_KEY_DRIVERS, JSON.stringify(drivers));
+                localStorage.setItem(STORAGE_KEY_ROUTES, JSON.stringify(routes));
+                localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+            } catch (e) {
+                console.error('Gagal menyimpan ke localStorage:', e);
+            }
+        }
+
+        async function saveData() {
+            saveLocalOnly();
+
+            const apiUrl = getGasApiUrl();
+            if (apiUrl) {
+                updateSyncStatus('Menyimpan ke Sheet...', 'text-amber-400');
+                const payloadStr = JSON.stringify({
+                    drivers: drivers,
+                    routes: routes,
+                    history: history
+                });
+
+                try {
+                    const separator = apiUrl.includes('?') ? '&' : '?';
+                    const targetUrl = `${apiUrl}${separator}action=save&payload=${encodeURIComponent(payloadStr)}&t=${Date.now()}`;
+
+                    const res = await fetch(targetUrl, {
+                        method: 'GET',
+                        redirect: 'follow',
+                        cache: 'no-store'
+                    });
+
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const result = await res.json();
+
+                    if (result && result.status === 'success') {
+                        updateSyncStatus('Tersimpan di Google Sheet', 'text-emerald-400');
+                    } else {
+                        throw new Error((result && result.message) ? result.message : 'Gagal menulis ke Sheet');
+                    }
+                } catch (err) {
+                    console.error('Gagal mengirim ke Google Apps Script:', err);
+                    updateSyncStatus('Gagal Sync Sheet', 'text-red-400');
+                    showToast('Gagal menyimpan ke Google Sheet: ' + err.message, 'warning');
+                }
+            }
+        }
+
+        async function testWriteToSheet() {
+            const url = document.getElementById('gasApiUrlInput').value.trim();
+            if (!url) {
+                showToast('Isi URL Web App terlebih dahulu!', 'warning');
+                return;
+            }
+            localStorage.setItem(STORAGE_KEY_API_URL, url);
+            showToast('Menguji pengiriman data ke Google Sheet...', 'info');
+            await saveData();
+        }
+
+        function openApiModal() {
+            document.getElementById('gasApiUrlInput').value = getGasApiUrl();
+            document.getElementById('apiModal').classList.remove('hidden');
+        }
+
+        function closeApiModal() {
+            document.getElementById('apiModal').classList.add('hidden');
+        }
+
+        function saveApiUrl() {
+            const url = document.getElementById('gasApiUrlInput').value.trim();
+            if (!url || !url.startsWith('https://script.google.com/')) {
+                showToast('Masukkan URL Web App Google Apps Script yang valid (diawali https://script.google.com/)!', 'warning');
+                return;
+            }
+            localStorage.setItem(STORAGE_KEY_API_URL, url);
+            closeApiModal();
+            showToast('URL API disimpan! Menghubungkan ke Google Sheet...', 'info');
+            loadData();
+        }
+
+        function clearApiUrl() {
+            localStorage.removeItem(STORAGE_KEY_API_URL);
+            document.getElementById('gasApiUrlInput').value = '';
+            closeApiModal();
+            const btnRefresh = document.getElementById('btnRefresh');
+            if (btnRefresh) btnRefresh.classList.add('hidden');
+            updateSyncStatus('Database Lokal Siap', 'text-emerald-400');
+            showToast('Koneksi Google Sheet diputus. Beralih ke penyimpanan lokal.', 'info');
+        }
+
+        function updateSyncStatus(text, colorClass) {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            el.className = `text-xs bg-slate-800 ${colorClass} px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5`;
+            el.innerHTML = `<i class="fa-solid fa-cloud"></i> <span>${text}</span>`;
+        }
+
+        // ==========================================
+        // 3. ALGORITMA REKOMENDASI ROLLINGAN ADIL
+        // ==========================================
+        function getRouteByKey(routeKey) {
+            return routes.find(r => r.key === routeKey);
+        }
+
+        function getRecommendedQueue(routeKey) {
+            const activeDrivers = drivers.filter(d => d.status === 'ACTIVE');
+
+            return activeDrivers.sort((a, b) => {
+                // 1. Jika supir sedang di-skip sementara pada tujuan ini, taruh di belakang supir aktif yang tidak di-skip
+                const skipA = (a.skipped && a.skipped[routeKey]) ? a.skipped[routeKey] : 0;
+                const skipB = (b.skipped && b.skipped[routeKey]) ? b.skipped[routeKey] : 0;
+                if ((skipA > 0) !== (skipB > 0)) {
+                    return skipA > 0 ? 1 : -1;
+                }
+                if (skipA > 0 && skipB > 0 && skipA !== skipB) {
+                    return skipA - skipB;
+                }
+
+                // 2. Prioritaskan yang jumlah muatannya paling sedikit
+                const countA = a.counts[routeKey] || 0;
+                const countB = b.counts[routeKey] || 0;
+                if (countA !== countB) {
+                    return countA - countB;
+                }
+
+                // 3. Jika jumlah muatan sama, urutkan berdasarkan yang paling lama tidak muat
+                const lastA = a.lastAssigned[routeKey] || 0;
+                const lastB = b.lastAssigned[routeKey] || 0;
+                if (lastA !== lastB) {
+                    return lastA - lastB;
+                }
+                return a.id - b.id;
+            });
+        }
+
+        function isCatchingUp(driver, routeKey) {
+            if (driver.status !== 'ACTIVE') return false;
+            const maxCount = Math.max(...drivers.map(d => d.counts[routeKey] || 0));
+            return (driver.counts[routeKey] || 0) < maxCount;
+        }
+
+        // ==========================================
+        // 4. RENDER TAMPILAN (UI)
+        // ==========================================
+        function renderAll() {
+            const driverCountEl = document.getElementById('driverCount');
+            if (driverCountEl) driverCountEl.textContent = drivers.length;
+            renderRecommendationCards();
+            renderDriverTable();
+            renderHistoryTable();
+        }
+
+        function renderRecommendationCards() {
+            const container = document.getElementById('recommendationCards');
+            if (!container) return;
+            container.innerHTML = '';
+
+            routes.forEach(route => {
+                const style = COLOR_STYLES[route.badgeColor] || COLOR_STYLES.indigo;
+                const queue = getRecommendedQueue(route.key);
+                const nextDriver = queue[0];
+                const secondDriver = queue[1];
+                const thirdDriver = queue[2];
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl shadow-sm border ${style.border} overflow-hidden flex flex-col justify-between transition hover:shadow-md`;
+
+                const deleteRouteBtn = !route.isDefault 
+                    ? `<button type="button" onclick="deleteCustomRoute('${route.key}')" class="text-white/70 hover:text-white ml-2 p-1 rounded transition" title="Hapus Tujuan Ini">
+                         <i class="fa-solid fa-trash-can text-xs"></i>
+                       </button>` 
+                    : '';
+
+                if (!nextDriver) {
+                    card.innerHTML = `
+                        <div class="${style.headerBg} px-4 py-3 text-white flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-sm tracking-wide flex items-center">${route.name} ${deleteRouteBtn}</h3>
+                                <p class="text-xs opacity-90">${route.desc}</p>
+                            </div>
+                            <i class="fa-solid fa-route text-lg opacity-80"></i>
+                        </div>
+                        <div class="p-6 text-center text-slate-500 text-sm">
+                            <i class="fa-solid fa-circle-exclamation text-2xl text-red-400 mb-2"></i>
+                            <p>Semua supir sedang Sakit / Perbaikan.</p>
+                        </div>
+                    `;
+                } else {
+                    const isSkippedFlag = nextDriver.skipped && nextDriver.skipped[route.key] > 0;
+                    const catchUpBadge = isCatchingUp(nextDriver, route.key) 
+                        ? `<span class="inline-flex items-center gap-1 bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-200">
+                             <i class="fa-solid fa-bolt"></i> Giliran Susulan
+                           </span>` 
+                        : `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                             <i class="fa-solid fa-check-circle"></i> Giliran Normal
+                           </span>`;
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="${style.headerBg} px-4 py-3 text-white flex justify-between items-center gap-2">
+                                <div class="min-w-0">
+                                    <h3 class="font-bold text-sm sm:text-base tracking-wide truncate flex items-center">
+                                        <span class="truncate">${route.name}</span>
+                                        ${deleteRouteBtn}
+                                    </h3>
+                                    <p class="text-xs opacity-90 truncate">${route.desc}</p>
+                                </div>
+                                <span class="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-lg shrink-0">
+                                    #1 Prioritas
+                                </span>
+                            </div>
+
+                            <div class="p-4">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-semibold text-slate-400 uppercase">Rekomendasi Utama</span>
+                                    ${catchUpBadge}
+                                </div>
+                                
+                                <div class="${style.lightBg} rounded-xl p-3.5 border ${style.border} mb-3">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div>
+                                            <div class="text-xs font-bold ${style.text} mb-0.5">No. Urut #${nextDriver.id} • ${nextDriver.plate}</div>
+                                            <div class="text-base font-bold text-slate-900 leading-snug">${nextDriver.name}</div>
+                                            ${isSkippedFlag ? '<span class="inline-block mt-1 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-semibold">Giliran Sempat Di-Skip</span>' : ''}
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="block text-[10px] text-slate-500 uppercase">Sudah Muat</span>
+                                            <span class="text-lg font-extrabold ${style.text}">${nextDriver.counts[route.key] || 0}x</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5 text-xs">
+                                    <div class="text-[11px] font-semibold text-slate-400 uppercase">Antrean Selanjutnya:</div>
+                                    ${secondDriver ? `
+                                        <div class="flex justify-between items-center text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg">
+                                            <span class="truncate pr-2"><b>2.</b> ${secondDriver.name} <span class="text-slate-400">(${secondDriver.plate})</span></span>
+                                            <span class="font-semibold text-slate-500 shrink-0">${secondDriver.counts[route.key] || 0}x</span>
+                                        </div>
+                                    ` : ''}
+                                    ${thirdDriver ? `
+                                        <div class="flex justify-between items-center text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg">
+                                            <span class="truncate pr-2"><b>3.</b> ${thirdDriver.name} <span class="text-slate-400">(${thirdDriver.plate})</span></span>
+                                            <span class="font-semibold text-slate-500 shrink-0">${thirdDriver.counts[route.key] || 0}x</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-4 pb-4 pt-1 flex items-center gap-2">
+                            <button type="button" onclick="quickAssign(${nextDriver.id}, '${route.key}')" class="flex-1 ${style.btn} text-white font-semibold text-sm py-2.5 px-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2 active:scale-[0.99]">
+                                <i class="fa-solid fa-truck-loading"></i> Pilih & Tugaskan
+                            </button>
+                            <button type="button" onclick="skipDriver(${nextDriver.id}, '${route.key}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-semibold text-sm py-2.5 px-3.5 rounded-xl transition flex items-center justify-center gap-1.5 active:scale-[0.99]" title="Lewati sementara (misal: masih muat di tujuan lain)">
+                                <i class="fa-solid fa-forward-step text-slate-500"></i> Skip
+                            </button>
+                        </div>
+                    `;
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderDriverTable() {
+            const thead = document.getElementById('driverTableHead');
+            const tbody = document.getElementById('driverTableBody');
+            if (!thead || !tbody) return;
+
+            let routeHeadersHtml = '';
+            routes.forEach(r => {
+                const style = COLOR_STYLES[r.badgeColor] || COLOR_STYLES.indigo;
+                const subLabel = r.distance > 0 ? `(${r.distance} KM)` : '(Wajib)';
+                routeHeadersHtml += `
+                    <th class="py-3 px-3 font-semibold text-center ${style.thBg} min-w-[115px]">
+                        ${r.name}<br><span class="text-[10px] font-normal ${style.thSub}">${subLabel}</span>
+                    </th>
+                `;
+            });
+
+            thead.innerHTML = `
+                <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
+                    <th class="py-3 px-4 font-semibold w-12 text-center">No</th>
+                    <th class="py-3 px-4 font-semibold min-w-[210px]">Data Supir & Armada</th>
+                    <th class="py-3 px-4 font-semibold min-w-[180px]">Status Kondisi</th>
+                    ${routeHeadersHtml}
+                    <th class="py-3 px-4 font-semibold text-right min-w-[100px]">Total KM</th>
+                    <th class="py-3 px-4 font-semibold text-center">Aksi</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = '';
+
+            const maxCounts = {};
+            routes.forEach(r => {
+                maxCounts[r.key] = Math.max(...drivers.map(d => d.counts[r.key] || 0));
+            });
+
+            drivers.forEach(driver => {
+                let totalKm = 0;
+                routes.forEach(r => {
+                    totalKm += (driver.counts[r.key] || 0) * (r.distance || 0);
+                });
+
+                const isUnavailable = driver.status !== 'ACTIVE';
+
+                let rowBg = 'hover:bg-slate-50 transition';
+                if (driver.status === 'SICK') rowBg = 'bg-red-50/50 hover:bg-red-50 transition';
+                if (driver.status === 'REPAIR') rowBg = 'bg-amber-50/50 hover:bg-amber-50 transition';
+
+                let routeCellsHtml = '';
+                routes.forEach(r => {
+                    const style = COLOR_STYLES[r.badgeColor] || COLOR_STYLES.indigo;
+                    const countVal = driver.counts[r.key] || 0;
+                    const isBehind = !isUnavailable && countVal < maxCounts[r.key];
+                    const isSkipped = !isUnavailable && driver.skipped && driver.skipped[r.key] > 0;
+                    routeCellsHtml += `
+                        <td class="py-3.5 px-3 text-center ${style.tdBg}">
+                            <span class="inline-flex items-center justify-center font-bold ${style.badge} w-8 h-8 rounded-lg">
+                                ${countVal}
+                            </span>
+                            ${isBehind ? '<div class="text-[10px] font-bold text-rose-600 mt-0.5">Tertinggal</div>' : ''}
+                            ${isSkipped ? '<div class="text-[10px] font-semibold text-amber-600 mt-0.5">Di-Skip</div>' : ''}
+                        </td>
+                    `;
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = rowBg;
+                tr.innerHTML = `
+                    <td class="py-3.5 px-4 text-center font-bold text-slate-500">${driver.id}</td>
+                    <td class="py-3.5 px-4">
+                        <div class="font-bold text-slate-900 ${isUnavailable ? 'line-through text-slate-400' : ''}">${driver.name}</div>
+                        <div class="flex flex-wrap items-center gap-2 mt-1 text-xs">
+                            <span class="bg-slate-800 text-white font-mono px-2 py-0.5 rounded text-[11px] font-semibold">${driver.plate}</span>
+                            <span class="text-slate-500"><i class="fa-regular fa-id-card mr-1"></i>${driver.sim}</span>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <select onchange="changeDriverStatus(${driver.id}, this.value)" class="text-xs font-semibold rounded-lg px-2.5 py-1.5 border outline-none cursor-pointer transition ${getStatusSelectStyle(driver.status)}">
+                            <option value="ACTIVE" ${driver.status === 'ACTIVE' ? 'selected' : ''}>🟢 Siap Muat</option>
+                            <option value="SICK" ${driver.status === 'SICK' ? 'selected' : ''}>🔴 Supir Sakit (Lewati)</option>
+                            <option value="REPAIR" ${driver.status === 'REPAIR' ? 'selected' : ''}>🟠 Perbaikan Mobil (Lewati)</option>
+                        </select>
+                    </td>
+                    ${routeCellsHtml}
+                    <td class="py-3.5 px-4 text-right font-mono font-semibold text-slate-700">
+                        ${totalKm.toLocaleString('id-ID')} KM
+                    </td>
+                    <td class="py-3.5 px-4 text-center">
+                        <button type="button" onclick="openAssignModalForDriver(${driver.id})" ${isUnavailable ? 'disabled' : ''} class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${isUnavailable ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200'}">
+                            + Muat
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getStatusSelectStyle(status) {
+            if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700 border-emerald-300';
+            if (status === 'SICK') return 'bg-red-50 text-red-700 border-red-300';
+            if (status === 'REPAIR') return 'bg-amber-50 text-amber-700 border-amber-300';
+            return '';
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            const countEl = document.getElementById('historyCount');
+            if (countEl) countEl.textContent = history.length;
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (history.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400 text-sm">
+                            <i class="fa-solid fa-clipboard-list text-2xl mb-2 block"></i>
+                            Belum ada riwayat penugasan muatan. Silakan klik tombol <b>"Pilih & Tugaskan"</b> di atas.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const sortedHistory = [...history].reverse();
+
+            sortedHistory.forEach(item => {
+                const route = getRouteByKey(item.routeKey);
+                const style = route ? (COLOR_STYLES[route.badgeColor] || COLOR_STYLES.indigo) : null;
+                const badgeClass = style ? style.histBadge : 'bg-slate-100 text-slate-700';
+                const routeLabel = route ? route.name : (item.routeName || item.routeKey);
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap">${item.timestamp}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">${item.driverName}</td>
+                    <td class="py-3 px-4"><span class="bg-slate-800 text-white font-mono px-2 py-0.5 rounded text-xs">${item.plate}</span></td>
+                    <td class="py-3 px-4">
+                        <span class="${badgeClass} text-xs font-bold px-2.5 py-1 rounded-lg">${routeLabel}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-xs font-semibold text-slate-600">
+                        ${item.distance > 0 ? item.distance + ' KM' : 'Wajib'}
+                    </td>
+                    <td class="py-3 px-4 text-center text-xs text-slate-500">${item.note || '-'}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button type="button" onclick="deleteHistoryItem('${item.id}')" class="text-slate-400 hover:text-red-600 transition p-1" title="Batalkan & Hapus Riwayat">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ==========================================
+        // 5. AKSI & MANAJEMEN TUJUAN BARU
+        // ==========================================
+        function openAddRouteModal() {
+            document.getElementById('newRouteName').value = '';
+            document.getElementById('newRouteDistance').value = '0';
+            document.getElementById('newRouteColor').value = 'emerald';
+            document.getElementById('newRouteDesc').value = '';
+            document.getElementById('addRouteModal').classList.remove('hidden');
+            document.getElementById('newRouteName').focus();
+        }
+
+        function closeAddRouteModal() {
+            document.getElementById('addRouteModal').classList.add('hidden');
+        }
+
+        function saveNewRoute() {
+            const rawName = document.getElementById('newRouteName').value.trim().toUpperCase();
+            const distance = parseInt(document.getElementById('newRouteDistance').value) || 0;
+            const color = document.getElementById('newRouteColor').value;
+            const customDesc = document.getElementById('newRouteDesc').value.trim();
+
+            if (!rawName) {
+                showToast('Nama tujuan muatan wajib diisi!', 'warning');
+                return;
+            }
+
+            const cleanKey = 'RUTE_' + rawName.replace(/[^A-Z0-9]/g, '_') + '_' + Date.now().toString().slice(-4);
+            const desc = customDesc || (distance > 0 ? `Jarak Tempuh (${distance} KM)` : 'Muatan Wajib Rollingan');
+
+            routes.push({
+                key: cleanKey,
+                name: rawName,
+                distance: distance,
+                badgeColor: color,
+                desc: desc,
+                isDefault: false
+            });
+
+            normalizeDriverStructures();
+            saveData();
+            renderAll();
+            closeAddRouteModal();
+            showToast(`Tujuan baru "${rawName}" berhasil ditambahkan ke sistem rollingan!`, 'success');
+        }
+
+        function deleteCustomRoute(routeKey) {
+            const route = getRouteByKey(routeKey);
+            if (!route || route.isDefault) return;
+
+            routes = routes.filter(r => r.key !== routeKey);
+            saveData();
+            renderAll();
+            showToast(`Tujuan "${route.name}" dihapus dari daftar aktif.`, 'info');
+        }
+
+        function changeDriverStatus(driverId, newStatus) {
+            const driver = drivers.find(d => d.id === driverId);
+            if (!driver) return;
+
+            const oldStatus = driver.status;
+            driver.status = newStatus;
+            saveData();
+            renderAll();
+
+            if (newStatus === 'SICK') {
+                showToast(`${driver.name} ditandai SAKIT. Giliran otomatis dialihkan ke supir berikutnya.`, 'warning');
+            } else if (newStatus === 'REPAIR') {
+                showToast(`${driver.name} ditandai PERBAIKAN MOBIL. Giliran otomatis dialihkan.`, 'warning');
+            } else if (newStatus === 'ACTIVE' && oldStatus !== 'ACTIVE') {
+                showToast(`${driver.name} kembali SIAP MUAT. Sistem akan memprioritaskan jika gilirannya tertinggal.`, 'success');
+            }
+        }
+
+        function quickAssign(driverId, routeKey) {
+            const driver = drivers.find(d => d.id === driverId);
+            const route = getRouteByKey(routeKey);
+            if (!driver || !route) return;
+
+            executeAssignment(driverId, routeKey, 'Sesuai Urutan Rekomendasi');
+            
+            const nextQueue = getRecommendedQueue(routeKey);
+            const nextUp = nextQueue[0];
+            const nextMsg = nextUp ? `Lanjutan berikutnya: ${nextUp.name} (${nextUp.plate})` : '';
+            
+            showToast(`Berhasil! ${driver.name} ditugaskan ke ${route.name}. ${nextMsg}`, 'success');
+        }
+
+        function skipDriver(driverId, routeKey) {
+            const driver = drivers.find(d => d.id === driverId);
+            const route = getRouteByKey(routeKey);
+            if (!driver || !route) return;
+
+            const activeDrivers = drivers.filter(d => d.status === 'ACTIVE');
+            if (activeDrivers.length <= 1) {
+                showToast('Tidak ada supir aktif lain untuk menggantikan.', 'warning');
+                return;
+            }
+
+            if (!driver.skipped) driver.skipped = {};
+            const currentlySkippedCount = activeDrivers.filter(d => d.skipped && d.skipped[routeKey] > 0).length;
+
+            if (currentlySkippedCount >= activeDrivers.length - 1) {
+                drivers.forEach(d => {
+                    if (d.skipped) d.skipped[routeKey] = 0;
+                });
+            }
+
+            driver.skipped[routeKey] = Date.now();
+            driver.lastAssigned[routeKey] = Date.now();
+            
+            saveData();
+            renderAll();
+
+            const nextQueue = getRecommendedQueue(routeKey);
+            const nextUp = nextQueue[0];
+            const nextMsg = nextUp && nextUp.id !== driverId ? `Dialihkan ke: ${nextUp.name} (${nextUp.plate})` : '';
+
+            showToast(`${driver.name} di-SKIP sementara untuk ${route.name}. ${nextMsg}`, 'info');
+        }
+
+        function openManualAssignModal() {
+            populateModalSelects(null, routes[0] ? routes[0].key : 'IBP_WINA');
+            document.getElementById('assignModal').classList.remove('hidden');
+        }
+
+        function openAssignModalForDriver(driverId) {
+            populateModalSelects(driverId, routes[0] ? routes[0].key : 'IBP_WINA');
+            document.getElementById('assignModal').classList.remove('hidden');
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').classList.add('hidden');
+        }
+
+        function populateModalSelects(selectedDriverId, selectedRouteKey) {
+            const driverSelect = document.getElementById('modalDriverSelect');
+            const routeSelect = document.getElementById('modalRouteSelect');
+            document.getElementById('modalNoteInput').value = '';
+
+            driverSelect.innerHTML = '';
+            drivers.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                const statusLabel = d.status === 'ACTIVE' ? '' : (d.status === 'SICK' ? ' [SAKIT]' : ' [PERBAIKAN]');
+                opt.textContent = `#${d.id} - ${d.name} (${d.plate})${statusLabel}`;
+                if (d.status !== 'ACTIVE') opt.disabled = true;
+                if (selectedDriverId && d.id === selectedDriverId) opt.selected = true;
+                driverSelect.appendChild(opt);
+            });
+
+            routeSelect.innerHTML = '';
+            routes.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.key;
+                opt.textContent = r.distance > 0 ? `${r.name} (Jarak ${r.distance} KM)` : `${r.name} (${r.desc})`;
+                routeSelect.appendChild(opt);
+            });
+
+            if (selectedRouteKey) routeSelect.value = selectedRouteKey;
+            checkModalRecommendationWarning();
+
+            driverSelect.onchange = checkModalRecommendationWarning;
+            routeSelect.onchange = checkModalRecommendationWarning;
+        }
+
+        function checkModalRecommendationWarning() {
+            const driverId = parseInt(document.getElementById('modalDriverSelect').value);
+            const routeKey = document.getElementById('modalRouteSelect').value;
+            const queue = getRecommendedQueue(routeKey);
+            const warningBox = document.getElementById('modalWarningBox');
+            const warningText = document.getElementById('modalWarningText');
+
+            if (queue.length > 0 && queue[0].id !== driverId) {
+                warningBox.classList.remove('hidden');
+                warningText.innerHTML = `Catatan: Menurut urutan adil saat ini, giliran utama untuk tujuan ini adalah <b>${queue[0].name}</b>. Namun Anda tetap bisa melanjutkan jika memang diperlukan.`;
+            } else {
+                warningBox.classList.add('hidden');
+            }
+        }
+
+        function confirmAssignment() {
+            const driverId = parseInt(document.getElementById('modalDriverSelect').value);
+            const routeKey = document.getElementById('modalRouteSelect').value;
+            const note = document.getElementById('modalNoteInput').value.trim();
+
+            executeAssignment(driverId, routeKey, note || 'Input Manual');
+            closeAssignModal();
+
+            const driver = drivers.find(d => d.id === driverId);
+            const route = getRouteByKey(routeKey);
+            const nextQueue = getRecommendedQueue(routeKey);
+            const nextUp = nextQueue[0];
+            
+            showToast(`${driver.name} ditugaskan ke ${route ? route.name : routeKey}. Selanjutnya: ${nextUp ? nextUp.name : '-'}`, 'success');
+        }
+
+        function executeAssignment(driverId, routeKey, note) {
+            const driver = drivers.find(d => d.id === driverId);
+            const route = getRouteByKey(routeKey);
+            if (!driver || !route) return;
+
+            driver.counts[routeKey] = (driver.counts[routeKey] || 0) + 1;
+            driver.lastAssigned[routeKey] = Date.now();
+
+            drivers.forEach(d => {
+                if (d.skipped) d.skipped[routeKey] = 0;
+            });
+
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + 
+                                  now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            history.push({
+                id: 'TRX-' + Date.now(),
+                timestamp: formattedDate,
+                driverId: driver.id,
+                driverName: driver.name,
+                plate: driver.plate,
+                routeKey: routeKey,
+                routeName: route.name,
+                distance: route.distance,
+                note: note
+            });
+
+            saveData();
+            renderAll();
+        }
+
+        function deleteHistoryItem(trxId) {
+            const index = history.findIndex(h => h.id === trxId);
+            if (index === -1) return;
+
+            const item = history[index];
+            const driver = drivers.find(d => d.id === item.driverId);
+
+            if (driver && driver.counts && driver.counts[item.routeKey] > 0) {
+                driver.counts[item.routeKey] -= 1;
+            }
+
+            history.splice(index, 1);
+            saveData();
+            renderAll();
+            showToast('Riwayat muatan dibatalkan & hitungan supir disesuaikan kembali.', 'info');
+        }
+
+        function switchTab(tabName) {
+            const btnDrivers = document.getElementById('tab-drivers');
+            const btnHistory = document.getElementById('tab-history');
+            const viewDrivers = document.getElementById('view-drivers');
+            const viewHistory = document.getElementById('view-history');
+
+            if (tabName === 'drivers') {
+                btnDrivers.className = 'tab-btn px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 border-blue-600 text-blue-600 bg-white transition';
+                btnHistory.className = 'tab-btn px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition';
+                viewDrivers.classList.remove('hidden');
+                viewHistory.classList.add('hidden');
+            } else {
+                btnHistory.className = 'tab-btn px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 border-blue-600 text-blue-600 bg-white transition';
+                btnDrivers.className = 'tab-btn px-4 py-2.5 text-sm font-semibold rounded-t-xl border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition';
+                viewHistory.classList.remove('hidden');
+                viewDrivers.classList.add('hidden');
+            }
+        }
+
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+        }
+
+        function executeReset() {
+            drivers = JSON.parse(JSON.stringify(INITIAL_DRIVERS));
+            routes = JSON.parse(JSON.stringify(INITIAL_ROUTES));
+            history = [];
+            normalizeDriverStructures();
+            saveData();
+            renderAll();
+            closeResetModal();
+            showToast('Semua data rollingan berhasil di-reset ke awal.', 'info');
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-800 text-white border-slate-700';
+            let icon = 'fa-circle-check text-emerald-400';
+            
+            if (type === 'warning') {
+                bg = 'bg-amber-900 text-amber-50 border-amber-700';
+                icon = 'fa-triangle-exclamation text-amber-400';
+            } else if (type === 'info') {
+                bg = 'bg-blue-900 text-blue-50 border-blue-700';
+                icon = 'fa-circle-info text-blue-400';
+            }
+
+            toast.className = `${bg} border px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm flex items-start gap-2.5 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} mt-0.5 text-base"></i>
+                <div class="leading-snug">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4500);
+        }
+    </script>
+</body>
+</html>
