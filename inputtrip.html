@@ -436,24 +436,38 @@
             }
         }
 
+        let isSavingToCloud = false;
+        let hasPendingSave = false;
+
         async function saveData() {
             saveLocalOnly();
 
             const apiUrl = getGasApiUrl();
-            if (apiUrl) {
-                updateSyncStatus('Menyimpan ke Sheet...', 'text-amber-400');
-                const payloadStr = JSON.stringify({
-                    drivers: drivers,
-                    routes: routes,
-                    history: history
-                });
+            if (!apiUrl) return;
 
-                try {
-                    const separator = apiUrl.includes('?') ? '&' : '?';
-                    const targetUrl = `${apiUrl}${separator}action=save&payload=${encodeURIComponent(payloadStr)}&t=${Date.now()}`;
+            if (isSavingToCloud) {
+                hasPendingSave = true;
+                return;
+            }
 
-                    const res = await fetch(targetUrl, {
-                        method: 'GET',
+            isSavingToCloud = true;
+            updateSyncStatus('Menyimpan ke Sheet...', 'text-amber-400');
+
+            try {
+                do {
+                    hasPendingSave = false;
+                    const payloadStr = JSON.stringify({
+                        drivers: drivers,
+                        routes: routes,
+                        history: history
+                    });
+
+                    const res = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8'
+                        },
+                        body: payloadStr,
                         redirect: 'follow',
                         cache: 'no-store'
                     });
@@ -461,16 +475,18 @@
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     const result = await res.json();
 
-                    if (result && result.status === 'success') {
-                        updateSyncStatus('Tersimpan di Google Sheet', 'text-emerald-400');
-                    } else {
+                    if (!result || result.status !== 'success') {
                         throw new Error((result && result.message) ? result.message : 'Gagal menulis ke Sheet');
                     }
-                } catch (err) {
-                    console.error('Gagal mengirim ke Google Apps Script:', err);
-                    updateSyncStatus('Gagal Sync Sheet', 'text-red-400');
-                    showToast('Gagal menyimpan ke Google Sheet: ' + err.message, 'warning');
-                }
+                } while (hasPendingSave);
+
+                updateSyncStatus('Tersimpan di Google Sheet', 'text-emerald-400');
+            } catch (err) {
+                console.error('Gagal mengirim ke Google Apps Script:', err);
+                updateSyncStatus('Gagal Sync Sheet', 'text-red-400');
+                showToast('Gagal menyimpan ke Google Sheet: ' + err.message, 'warning');
+            } finally {
+                isSavingToCloud = false;
             }
         }
 
