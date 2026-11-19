@@ -56,7 +56,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg sm:text-xl font-bold tracking-tight">Sistem Rollingan Angkutan</h1>
-                    <p class="text-xs text-slate-400">Terhubung Langsung ke Google Sheets</p>
+                    <p class="text-xs text-slate-400">Terhubung Langsung ke Google Sheets (2 Trip Rollingan)</p>
                 </div>
             </div>
 
@@ -95,7 +95,7 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="recommendationCards"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="recommendationCards"></div>
         </section>
 
         <!-- Section 2: Tabs Navigasi -->
@@ -122,9 +122,9 @@
                 <div class="bg-blue-50 border border-blue-100 rounded-xl p-3.5 mb-5 flex items-start gap-3 text-xs sm:text-sm text-blue-800">
                     <i class="fa-solid fa-circle-info text-blue-600 mt-0.5 text-base"></i>
                     <div>
-                        <p class="font-semibold">Cara Kerja Keadilan, Skip & Kompensasi Terlewati:</p>
+                        <p class="font-semibold">Cara Kerja Keadilan & Rollingan Lintas Trip:</p>
                         <p class="text-blue-700 mt-0.5 leading-relaxed">
-                            Setiap tujuan dihitung terpisah agar adil. Jika status supir diubah menjadi <b>Sakit</b> atau <b>Perbaikan</b>, sistem otomatis melewatkannya dan memprioritaskannya kembali saat status sudah <b>Siap Muat</b>. Tombol <b>Skip</b> melewati supir sementara tanpa menambah hitungan muatannya.
+                            Setiap tujuan dihitung agar adil. Jika supir terpilih pada salah satu trip (misalnya <b>PENGAPALAN</b>), waktu giliran terakhirnya tercatat sehingga pada trip lain (<b>TLK - IBP, WINA</b>) ia otomatis bergeser ke belakang dan rekomendasi berikutnya naik.
                         </p>
                     </div>
                 </div>
@@ -269,21 +269,20 @@
         const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwYLTiexyrxLi-Hg0JwCzRtuciYxfMppTjpkA8nc8RJHOXIKf3RmJd3-jPTOmlMNA/exec';
 
         const INITIAL_DRIVERS = [
-            { id: 1, name: "FRANSISKUS JARIANDO A", plate: "BM 9822 DA", sim: "0914-7504-000483", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 2, name: "ANTO MARBUN", plate: "BM 8899 HJ", sim: "1471091909830062", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 3, name: "AHMAD JHONI NAINGGOLAN", plate: "BM 8331 AU", sim: "1277051703750001", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 4, name: "MELKI", plate: "BM 8899 JL", sim: "1208011511870001", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 5, name: "HURMAN AMBARITA", plate: "BM 9516 ML", sim: "1471092205830022", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 6, name: "ALEK SILABAN", plate: "BM 9823 DA", sim: "1471062506810065", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 7, name: "MISWARDI", plate: "BM 9409 DF", sim: "1303070101850001", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 8, name: "MARIO MIKKO BARUS", plate: "BM 8588 WH", sim: "1207211612990006", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 9, name: "SEKJAN H. SIRAIT", plate: "BM 8988 MM", sim: "0718-8302-000172", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
-            { id: 10, name: "IRMAN SYAHPUTRA SITORUS", plate: "BM 9821 DA", sim: "0914-9610-000572", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } }
+            { id: 1, name: "FRANSISKUS JARIANDO A", plate: "BM 9822 DA", sim: "0914-7504-000483", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 2, name: "ANTO MARBUN", plate: "BM 8899 HJ", sim: "1471091909830062", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 3, name: "AHMAD JHONI NAINGGOLAN", plate: "BM 8331 AU", sim: "1277051703750001", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 4, name: "MELKI", plate: "BM 8899 JL", sim: "1208011511870001", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 5, name: "HURMAN AMBARITA", plate: "BM 9516 ML", sim: "1471092205830022", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 6, name: "ALEK SILABAN", plate: "BM 9823 DA", sim: "1471062506810065", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 7, name: "MISWARDI", plate: "BM 9409 DF", sim: "1303070101850001", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 8, name: "MARIO MIKKO BARUS", plate: "BM 8588 WH", sim: "1207211612990006", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 9, name: "SEKJAN H. SIRAIT", plate: "BM 8988 MM", sim: "0718-8302-000172", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } },
+            { id: 10, name: "IRMAN SYAHPUTRA SITORUS", plate: "BM 9821 DA", sim: "0914-9610-000572", status: "ACTIVE", counts: { IBP_WINA: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, PENGAPALAN: 0 } }
         ];
 
         const INITIAL_ROUTES = [
             { key: 'IBP_WINA', name: 'TLK - IBP, WINA', distance: 400, badgeColor: 'indigo', desc: 'Jarak Jauh (400 KM)', isDefault: true },
-            { key: 'ASMJ', name: 'TLK - ASMJ', distance: 60, badgeColor: 'teal', desc: 'Jarak Dekat (60 KM)', isDefault: true },
             { key: 'PENGAPALAN', name: 'PENGAPALAN', distance: 0, badgeColor: 'amber', desc: 'Muatan Wajib Rollingan', isDefault: true }
         ];
 
@@ -364,11 +363,26 @@
             connectAndLoadSheet({ isInitial: true });
         }
 
+        function pruneRemovedRouteKeys(obj) {
+            if (!obj || typeof obj !== 'object') return {};
+            const cleaned = {};
+            Object.keys(obj).forEach(k => {
+                if (k !== 'ASMJ') cleaned[k] = obj[k];
+            });
+            return cleaned;
+        }
+
         function normalizeDriverStructures() {
+            routes = routes.filter(r => r.key !== 'ASMJ');
+            if (routes.length === 0) {
+                routes = JSON.parse(JSON.stringify(INITIAL_ROUTES));
+            }
+            history = history.filter(h => h.routeKey !== 'ASMJ');
+
             drivers.forEach(d => {
-                if (!d.counts || typeof d.counts !== 'object') d.counts = {};
-                if (!d.lastAssigned || typeof d.lastAssigned !== 'object') d.lastAssigned = {};
-                if (!d.skipped || typeof d.skipped !== 'object') d.skipped = {};
+                d.counts = pruneRemovedRouteKeys(d.counts);
+                d.lastAssigned = pruneRemovedRouteKeys(d.lastAssigned);
+                d.skipped = pruneRemovedRouteKeys(d.skipped);
                 routes.forEach(r => {
                     if (typeof d.counts[r.key] !== 'number') d.counts[r.key] = 0;
                     if (typeof d.lastAssigned[r.key] !== 'number') d.lastAssigned[r.key] = 0;
@@ -507,6 +521,24 @@
             return routes.find(r => r.key === routeKey);
         }
 
+        function getLatestAssignedTimestamp(driver) {
+            let latest = 0;
+            if (driver.lastAssigned && typeof driver.lastAssigned === 'object') {
+                Object.values(driver.lastAssigned).forEach(ts => {
+                    if (typeof ts === 'number' && ts > latest) latest = ts;
+                });
+            }
+            history.forEach(h => {
+                if (h.driverId === driver.id) {
+                    const ts = typeof h.createdAt === 'number'
+                        ? h.createdAt
+                        : Number(String(h.id || '').replace(/^TRX-/, ''));
+                    if (Number.isFinite(ts) && ts > latest) latest = ts;
+                }
+            });
+            return latest;
+        }
+
         function getRecommendedQueue(routeKey) {
             const activeDrivers = drivers.filter(d => d.status === 'ACTIVE');
 
@@ -526,11 +558,18 @@
                     return countA - countB;
                 }
 
-                const lastA = a.lastAssigned[routeKey] || 0;
-                const lastB = b.lastAssigned[routeKey] || 0;
-                if (lastA !== lastB) {
-                    return lastA - lastB;
+                const lastAnyA = getLatestAssignedTimestamp(a);
+                const lastAnyB = getLatestAssignedTimestamp(b);
+                if (lastAnyA !== lastAnyB) {
+                    return lastAnyA - lastAnyB;
                 }
+
+                const lastRouteA = a.lastAssigned[routeKey] || 0;
+                const lastRouteB = b.lastAssigned[routeKey] || 0;
+                if (lastRouteA !== lastRouteB) {
+                    return lastRouteA - lastRouteB;
+                }
+
                 return a.id - b.id;
             });
         }
@@ -949,12 +988,14 @@
         }
 
         function openManualAssignModal() {
-            populateModalSelects(null, routes[0] ? routes[0].key : 'IBP_WINA');
+            const defaultKey = routes[0] ? routes[0].key : 'IBP_WINA';
+            populateModalSelects(null, defaultKey);
             document.getElementById('assignModal').classList.remove('hidden');
         }
 
         function openAssignModalForDriver(driverId) {
-            populateModalSelects(driverId, routes[0] ? routes[0].key : 'IBP_WINA');
+            const defaultKey = routes[0] ? routes[0].key : 'IBP_WINA';
+            populateModalSelects(driverId, defaultKey);
             document.getElementById('assignModal').classList.remove('hidden');
         }
 
