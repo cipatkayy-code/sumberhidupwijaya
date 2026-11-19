@@ -45,9 +45,9 @@
             
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                 <span id="syncStatus" class="text-xs bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-check"></i> <span>Database Lokal Siap</span>
+                    <i class="fa-solid fa-circle-check"></i> <span>Memuat...</span>
                 </span>
-                <button type="button" onclick="refreshFromCloud()" id="btnRefresh" class="hidden text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5" title="Muat Ulang Data dari Google Sheet">
+                <button type="button" onclick="refreshFromCloud()" id="btnRefresh" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5" title="Muat Ulang Data dari Google Sheet">
                     <i class="fa-solid fa-arrows-rotate"></i>
                 </button>
                 <button type="button" onclick="openApiModal()" class="text-xs bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-3 py-1.5 rounded-lg border border-blue-500/40 transition flex items-center gap-1.5" title="Hubungkan URL Google Apps Script">
@@ -257,7 +257,7 @@
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2">
                 <div class="flex gap-2 items-center">
-                    <button type="button" onclick="clearApiUrl()" class="text-xs font-medium text-red-600 hover:underline">Putuskan</button>
+                    <button type="button" onclick="clearApiUrl()" class="text-xs font-medium text-red-600 hover:underline">Reset ke Default</button>
                     <button type="button" onclick="testWriteToSheet()" class="text-xs font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1.5 rounded-lg transition">Tes Simpan</button>
                 </div>
                 <div class="flex gap-2">
@@ -288,8 +288,8 @@
         // 1. KONFIGURASI & DATA MASTER SUPIR
         // ==========================================
         
-        // OPSIONAL: Tempelkan URL Web App Google Apps Script Anda di bawah ini agar otomatis terhubung tanpa setting manual di browser:
-        const DEFAULT_GAS_API_URL = '';
+        // URL Web App Google Apps Script tertanam permanen:
+        const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyxPPmz1B8_GANp5R2txK6WGBHwMeSdQUF8UWUV5_3m_adjPTLHqRwzHCrCdjKM2aU/exec';
 
         const INITIAL_DRIVERS = [
             { id: 1, name: "FRANSISKUS JARIANDO A", plate: "BM 9822 DA", sim: "0914-7504-000483", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
@@ -524,12 +524,10 @@
 
         function clearApiUrl() {
             localStorage.removeItem(STORAGE_KEY_API_URL);
-            document.getElementById('gasApiUrlInput').value = '';
+            document.getElementById('gasApiUrlInput').value = DEFAULT_GAS_API_URL;
             closeApiModal();
-            const btnRefresh = document.getElementById('btnRefresh');
-            if (btnRefresh) btnRefresh.classList.add('hidden');
-            updateSyncStatus('Database Lokal Siap', 'text-emerald-400');
-            showToast('Koneksi Google Sheet diputus. Beralih ke penyimpanan lokal.', 'info');
+            showToast('URL dikembalikan ke pengaturan default.', 'info');
+            loadData();
         }
 
         function updateSyncStatus(text, colorClass) {
