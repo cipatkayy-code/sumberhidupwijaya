@@ -17,14 +17,14 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f5f9; 
+            background: #f1f5f9;
         }
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
+            background: #cbd5e1;
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
+            background: #94a3b8;
         }
     </style>
 </head>
@@ -39,15 +39,15 @@
                 </div>
                 <div>
                     <h1 class="text-lg sm:text-xl font-bold tracking-tight">Sistem Rollingan Angkutan</h1>
-                    <p class="text-xs text-slate-400">Distribusi Muatan Adil, Merata & Otomatis</p>
+                    <p class="text-xs text-slate-400">Distribusi Muatan Adil, Merata & Terhubung Google Sheet</p>
                 </div>
             </div>
-            
+
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                <span id="syncStatus" class="text-xs bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-check"></i> <span>Memuat...</span>
+                <span id="syncStatus" class="text-xs bg-slate-800 text-amber-400 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud"></i> <span>Menghubungkan...</span>
                 </span>
-                <button type="button" onclick="refreshFromCloud()" id="btnRefresh" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5" title="Muat Ulang Data dari Google Sheet">
+                <button type="button" onclick="refreshFromCloud()" id="btnRefresh" class="hidden text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5" title="Muat Ulang Data dari Google Sheet">
                     <i class="fa-solid fa-arrows-rotate"></i>
                 </button>
                 <button type="button" onclick="openApiModal()" class="text-xs bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-3 py-1.5 rounded-lg border border-blue-500/40 transition flex items-center gap-1.5" title="Hubungkan URL Google Apps Script">
@@ -66,7 +66,7 @@
         <!-- Notifikasi Toast Container -->
         <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
-        <!-- Section 1: Rekomendasi Giliran Berikutnya (Kartu Aksi Cepat) -->
+        <!-- Section 1: Rekomendasi Giliran Berikutnya -->
         <section>
             <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
                 <div>
@@ -81,12 +81,10 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="recommendationCards">
-                <!-- Kartu rekomendasi dirender otomatis oleh JavaScript -->
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="recommendationCards"></div>
         </section>
 
-        <!-- Section 2: Tabs Navigasi (Database Supir & Riwayat Perjalanan) -->
+        <!-- Section 2: Tabs Navigasi -->
         <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="border-b border-slate-200 px-4 sm:px-6 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
                 <div class="flex space-x-2">
@@ -248,16 +246,16 @@
             </div>
             <div class="p-6 space-y-4">
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Tempelkan <b>URL Web App</b> dari Google Apps Script Anda (berakhiran <code>/exec</code>) agar data tersimpan online ke Google Sheets dari hosting ini.
+                    Tempelkan <b>URL Web App</b> dari Google Apps Script Anda (berakhiran <code>/exec</code>) agar seluruh perubahan langsung tersimpan ke Google Sheets.
                 </p>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">URL Web App Google Apps Script</label>
-                    <input type="url" id="gasApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="url" id="gasApiUrlInput" placeholder="https://script.google.com/macros/s/AKfycbwYLTiexyrxLi-Hg0JwCzRtuciYxfMppTjpkA8nc8RJHOXIKf3RmJd3-jPTOmlMNA/exec" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2">
                 <div class="flex gap-2 items-center">
-                    <button type="button" onclick="clearApiUrl()" class="text-xs font-medium text-red-600 hover:underline">Reset ke Default</button>
+                    <button type="button" onclick="clearApiUrl()" class="text-xs font-medium text-red-600 hover:underline">Putuskan</button>
                     <button type="button" onclick="testWriteToSheet()" class="text-xs font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1.5 rounded-lg transition">Tes Simpan</button>
                 </div>
                 <div class="flex gap-2">
@@ -287,9 +285,9 @@
         // ==========================================
         // 1. KONFIGURASI & DATA MASTER SUPIR
         // ==========================================
-        
-        // URL Web App Google Apps Script tertanam permanen:
-        const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxNLvHSj2sD9ZPQKNVPyfWzmdhf764Fh_G1U6ky0ipZFhWyUtVU_aeM_D40sOa5S-k/exec';
+
+        // Tempelkan URL Web App Google Apps Script Anda di bawah ini agar selalu terhubung otomatis:
+        const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwYLTiexyrxLi-Hg0JwCzRtuciYxfMppTjpkA8nc8RJHOXIKf3RmJd3-jPTOmlMNA/exec';
 
         const INITIAL_DRIVERS = [
             { id: 1, name: "FRANSISKUS JARIANDO A", plate: "BM 9822 DA", sim: "0914-7504-000483", status: "ACTIVE", counts: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, lastAssigned: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 }, skipped: { IBP_WINA: 0, ASMJ: 0, PENGAPALAN: 0 } },
@@ -324,15 +322,16 @@
         let routes = [];
         let history = [];
         const STORAGE_KEY_DRIVERS = 'rollingan_drivers_v5';
-        const STORAGE_KEY_ROUTES = 'rollingan_routes_v5';
+        const STORAGE_KEY_ROUTES  = 'rollingan_routes_v5';
         const STORAGE_KEY_HISTORY = 'rollingan_history_v5';
         const STORAGE_KEY_API_URL = 'rollingan_gas_api_url';
 
         function getGasApiUrl() {
             try {
-                return localStorage.getItem(STORAGE_KEY_API_URL) || DEFAULT_GAS_API_URL;
+                const stored = localStorage.getItem(STORAGE_KEY_API_URL);
+                return (stored && stored.trim()) ? stored.trim() : DEFAULT_GAS_API_URL.trim();
             } catch (e) {
-                return DEFAULT_GAS_API_URL;
+                return DEFAULT_GAS_API_URL.trim();
             }
         }
 
@@ -340,7 +339,16 @@
         // 2. INISIALISASI & PENYIMPANAN DATA
         // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
-            loadData();
+            loadData({ silent: true });
+            if (!getGasApiUrl()) {
+                showToast('URL API Google Apps Script belum diatur. Klik tombol "URL API" untuk menghubungkan ke Google Sheet.', 'warning');
+            }
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && getGasApiUrl() && !isSavingToCloud) {
+                loadData({ silent: true });
+            }
         });
 
         function normalizeDriverStructures() {
@@ -356,7 +364,8 @@
             });
         }
 
-        async function loadData() {
+        async function loadData(options = {}) {
+            const silent = Boolean(options.silent);
             const apiUrl = getGasApiUrl();
             const btnRefresh = document.getElementById('btnRefresh');
 
@@ -372,6 +381,10 @@
                     });
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     const response = await res.json();
+
+                    if (response && response.status === 'error') {
+                        throw new Error(response.message || 'Error dari Google Apps Script');
+                    }
 
                     if (response && Array.isArray(response.drivers) && response.drivers.length > 0) {
                         drivers = response.drivers;
@@ -390,38 +403,45 @@
                     }
                     updateSyncStatus('Terhubung Google Sheet', 'text-emerald-400');
                     renderAll();
+                    if (!silent) showToast('Data tersinkronisasi dengan Google Sheet.', 'success');
                     return;
                 } catch (err) {
                     console.error('Gagal memuat dari Google Apps Script:', err);
                     updateSyncStatus('Offline (Mode Lokal)', 'text-amber-400');
-                    showToast('Gagal terhubung ke Google Sheet, beralih ke data lokal sementara.', 'warning');
+                    if (!silent) {
+                        showToast('Gagal terhubung ke Google Sheet: ' + err.message, 'warning');
+                    }
                 }
             } else {
                 if (btnRefresh) btnRefresh.classList.add('hidden');
+                updateSyncStatus('Belum Terhubung Sheet', 'text-amber-400');
             }
             loadLocalFallback();
         }
 
         function refreshFromCloud() {
-            loadData();
-            showToast('Menyegarkan data dari Google Sheet...', 'info');
+            if (!getGasApiUrl()) {
+                openApiModal();
+                return;
+            }
+            loadData({ silent: false });
         }
 
         function loadLocalFallback() {
             try {
                 const savedDrivers = localStorage.getItem(STORAGE_KEY_DRIVERS);
-                const savedRoutes = localStorage.getItem(STORAGE_KEY_ROUTES);
+                const savedRoutes  = localStorage.getItem(STORAGE_KEY_ROUTES);
                 const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
 
-                routes = savedRoutes ? JSON.parse(savedRoutes) : JSON.parse(JSON.stringify(INITIAL_ROUTES));
+                routes  = savedRoutes  ? JSON.parse(savedRoutes)  : JSON.parse(JSON.stringify(INITIAL_ROUTES));
                 drivers = savedDrivers ? JSON.parse(savedDrivers) : JSON.parse(JSON.stringify(INITIAL_DRIVERS));
                 history = savedHistory ? JSON.parse(savedHistory) : [];
             } catch (e) {
-                routes = JSON.parse(JSON.stringify(INITIAL_ROUTES));
+                routes  = JSON.parse(JSON.stringify(INITIAL_ROUTES));
                 drivers = JSON.parse(JSON.stringify(INITIAL_DRIVERS));
                 history = [];
             }
-            
+
             normalizeDriverStructures();
             renderAll();
         }
@@ -443,11 +463,14 @@
             saveLocalOnly();
 
             const apiUrl = getGasApiUrl();
-            if (!apiUrl) return;
+            if (!apiUrl) {
+                updateSyncStatus('Belum Terhubung Sheet', 'text-amber-400');
+                return false;
+            }
 
             if (isSavingToCloud) {
                 hasPendingSave = true;
-                return;
+                return true;
             }
 
             isSavingToCloud = true;
@@ -480,11 +503,13 @@
                     }
                 } while (hasPendingSave);
 
-                updateSyncStatus('Tersimpan di Google Sheet', 'text-emerald-400');
+                updateSyncStatus('Terhubung Google Sheet', 'text-emerald-400');
+                return true;
             } catch (err) {
                 console.error('Gagal mengirim ke Google Apps Script:', err);
                 updateSyncStatus('Gagal Sync Sheet', 'text-red-400');
                 showToast('Gagal menyimpan ke Google Sheet: ' + err.message, 'warning');
+                return false;
             } finally {
                 isSavingToCloud = false;
             }
@@ -492,13 +517,16 @@
 
         async function testWriteToSheet() {
             const url = document.getElementById('gasApiUrlInput').value.trim();
-            if (!url) {
-                showToast('Isi URL Web App terlebih dahulu!', 'warning');
+            if (!url || !url.startsWith('https://script.google.com/')) {
+                showToast('Masukkan URL Web App Google Apps Script yang valid (diawali https://script.google.com/)!', 'warning');
                 return;
             }
             localStorage.setItem(STORAGE_KEY_API_URL, url);
-            showToast('Menguji pengiriman data ke Google Sheet...', 'info');
-            await saveData();
+            showToast('Menguji koneksi & tulis data ke Google Sheet...', 'info');
+            const ok = await saveData();
+            if (ok) {
+                showToast('Tes berhasil! Data terhubung & tersimpan di Google Sheet.', 'success');
+            }
         }
 
         function openApiModal() {
@@ -519,15 +547,17 @@
             localStorage.setItem(STORAGE_KEY_API_URL, url);
             closeApiModal();
             showToast('URL API disimpan! Menghubungkan ke Google Sheet...', 'info');
-            loadData();
+            loadData({ silent: false });
         }
 
         function clearApiUrl() {
             localStorage.removeItem(STORAGE_KEY_API_URL);
-            document.getElementById('gasApiUrlInput').value = DEFAULT_GAS_API_URL;
+            document.getElementById('gasApiUrlInput').value = '';
             closeApiModal();
-            showToast('URL dikembalikan ke pengaturan default.', 'info');
-            loadData();
+            const btnRefresh = document.getElementById('btnRefresh');
+            if (btnRefresh) btnRefresh.classList.add('hidden');
+            updateSyncStatus('Belum Terhubung Sheet', 'text-amber-400');
+            showToast('Koneksi Google Sheet diputus. Beralih ke penyimpanan lokal.', 'info');
         }
 
         function updateSyncStatus(text, colorClass) {
@@ -578,7 +608,7 @@
         function isCatchingUp(driver, routeKey) {
             if (driver.status !== 'ACTIVE') return false;
             const maxCount = Math.max(...drivers.map(d => d.counts[routeKey] || 0));
-            return (driver.counts[routeKey] || 0) < maxCount;
+            return maxCount > 0 && (driver.counts[routeKey] || 0) < maxCount;
         }
 
         // ==========================================
@@ -607,10 +637,10 @@
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-2xl shadow-sm border ${style.border} overflow-hidden flex flex-col justify-between transition hover:shadow-md`;
 
-                const deleteRouteBtn = !route.isDefault 
+                const deleteRouteBtn = !route.isDefault
                     ? `<button type="button" onclick="deleteCustomRoute('${route.key}')" class="text-white/70 hover:text-white ml-2 p-1 rounded transition" title="Hapus Tujuan Ini">
                          <i class="fa-solid fa-trash-can text-xs"></i>
-                       </button>` 
+                       </button>`
                     : '';
 
                 if (!nextDriver) {
@@ -629,10 +659,10 @@
                     `;
                 } else {
                     const isSkippedFlag = nextDriver.skipped && nextDriver.skipped[route.key] > 0;
-                    const catchUpBadge = isCatchingUp(nextDriver, route.key) 
+                    const catchUpBadge = isCatchingUp(nextDriver, route.key)
                         ? `<span class="inline-flex items-center gap-1 bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-200">
                              <i class="fa-solid fa-bolt"></i> Giliran Susulan
-                           </span>` 
+                           </span>`
                         : `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
                              <i class="fa-solid fa-check-circle"></i> Giliran Normal
                            </span>`;
@@ -657,7 +687,7 @@
                                     <span class="text-xs font-semibold text-slate-400 uppercase">Rekomendasi Utama</span>
                                     ${catchUpBadge}
                                 </div>
-                                
+
                                 <div class="${style.lightBg} rounded-xl p-3.5 border ${style.border} mb-3">
                                     <div class="flex items-start justify-between gap-2">
                                         <div>
@@ -755,7 +785,7 @@
                 routes.forEach(r => {
                     const style = COLOR_STYLES[r.badgeColor] || COLOR_STYLES.indigo;
                     const countVal = driver.counts[r.key] || 0;
-                    const isBehind = !isUnavailable && countVal < maxCounts[r.key];
+                    const isBehind = !isUnavailable && maxCounts[r.key] > 0 && countVal < maxCounts[r.key];
                     const isSkipped = !isUnavailable && driver.skipped && driver.skipped[r.key] > 0;
                     routeCellsHtml += `
                         <td class="py-3.5 px-3 text-center ${style.tdBg}">
@@ -875,7 +905,7 @@
 
         function saveNewRoute() {
             const rawName = document.getElementById('newRouteName').value.trim().toUpperCase();
-            const distance = parseInt(document.getElementById('newRouteDistance').value) || 0;
+            const distance = parseInt(document.getElementById('newRouteDistance').value, 10) || 0;
             const color = document.getElementById('newRouteColor').value;
             const customDesc = document.getElementById('newRouteDesc').value.trim();
 
@@ -908,6 +938,11 @@
             if (!route || route.isDefault) return;
 
             routes = routes.filter(r => r.key !== routeKey);
+            drivers.forEach(d => {
+                if (d.counts) delete d.counts[routeKey];
+                if (d.lastAssigned) delete d.lastAssigned[routeKey];
+                if (d.skipped) delete d.skipped[routeKey];
+            });
             saveData();
             renderAll();
             showToast(`Tujuan "${route.name}" dihapus dari daftar aktif.`, 'info');
@@ -919,6 +954,12 @@
 
             const oldStatus = driver.status;
             driver.status = newStatus;
+
+            if (newStatus === 'ACTIVE') {
+                driver.skipped = {};
+                routes.forEach(r => { driver.skipped[r.key] = 0; });
+            }
+
             saveData();
             renderAll();
 
@@ -937,11 +978,11 @@
             if (!driver || !route) return;
 
             executeAssignment(driverId, routeKey, 'Sesuai Urutan Rekomendasi');
-            
+
             const nextQueue = getRecommendedQueue(routeKey);
             const nextUp = nextQueue[0];
             const nextMsg = nextUp ? `Lanjutan berikutnya: ${nextUp.name} (${nextUp.plate})` : '';
-            
+
             showToast(`Berhasil! ${driver.name} ditugaskan ke ${route.name}. ${nextMsg}`, 'success');
         }
 
@@ -966,8 +1007,7 @@
             }
 
             driver.skipped[routeKey] = Date.now();
-            driver.lastAssigned[routeKey] = Date.now();
-            
+
             saveData();
             renderAll();
 
@@ -1024,7 +1064,7 @@
         }
 
         function checkModalRecommendationWarning() {
-            const driverId = parseInt(document.getElementById('modalDriverSelect').value);
+            const driverId = parseInt(document.getElementById('modalDriverSelect').value, 10);
             const routeKey = document.getElementById('modalRouteSelect').value;
             const queue = getRecommendedQueue(routeKey);
             const warningBox = document.getElementById('modalWarningBox');
@@ -1039,7 +1079,7 @@
         }
 
         function confirmAssignment() {
-            const driverId = parseInt(document.getElementById('modalDriverSelect').value);
+            const driverId = parseInt(document.getElementById('modalDriverSelect').value, 10);
             const routeKey = document.getElementById('modalRouteSelect').value;
             const note = document.getElementById('modalNoteInput').value.trim();
 
@@ -1050,7 +1090,7 @@
             const route = getRouteByKey(routeKey);
             const nextQueue = getRecommendedQueue(routeKey);
             const nextUp = nextQueue[0];
-            
+
             showToast(`${driver.name} ditugaskan ke ${route ? route.name : routeKey}. Selanjutnya: ${nextUp ? nextUp.name : '-'}`, 'success');
         }
 
@@ -1059,19 +1099,21 @@
             const route = getRouteByKey(routeKey);
             if (!driver || !route) return;
 
+            const txTime = Date.now();
             driver.counts[routeKey] = (driver.counts[routeKey] || 0) + 1;
-            driver.lastAssigned[routeKey] = Date.now();
+            driver.lastAssigned[routeKey] = txTime;
 
             drivers.forEach(d => {
                 if (d.skipped) d.skipped[routeKey] = 0;
             });
 
-            const now = new Date();
-            const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + 
+            const now = new Date(txTime);
+            const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' +
                                   now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
             history.push({
-                id: 'TRX-' + Date.now(),
+                id: 'TRX-' + txTime,
+                createdAt: txTime,
                 timestamp: formattedDate,
                 driverId: driver.id,
                 driverName: driver.name,
@@ -1086,6 +1128,18 @@
             renderAll();
         }
 
+        function recalculateLastAssignedForRoute(driver, routeKey) {
+            if (!driver) return;
+            const matching = history
+                .filter(h => h.driverId === driver.id && h.routeKey === routeKey)
+                .map(h => {
+                    if (typeof h.createdAt === 'number') return h.createdAt;
+                    const parsedId = Number(String(h.id || '').replace(/^TRX-/, ''));
+                    return Number.isFinite(parsedId) ? parsedId : 0;
+                });
+            driver.lastAssigned[routeKey] = matching.length > 0 ? Math.max(...matching) : 0;
+        }
+
         function deleteHistoryItem(trxId) {
             const index = history.findIndex(h => h.id === trxId);
             if (index === -1) return;
@@ -1093,11 +1147,13 @@
             const item = history[index];
             const driver = drivers.find(d => d.id === item.driverId);
 
+            history.splice(index, 1);
+
             if (driver && driver.counts && driver.counts[item.routeKey] > 0) {
                 driver.counts[item.routeKey] -= 1;
+                recalculateLastAssignedForRoute(driver, item.routeKey);
             }
 
-            history.splice(index, 1);
             saveData();
             renderAll();
             showToast('Riwayat muatan dibatalkan & hitungan supir disesuaikan kembali.', 'info');
@@ -1132,7 +1188,7 @@
 
         function executeReset() {
             drivers = JSON.parse(JSON.stringify(INITIAL_DRIVERS));
-            routes = JSON.parse(JSON.stringify(INITIAL_ROUTES));
+            routes  = JSON.parse(JSON.stringify(INITIAL_ROUTES));
             history = [];
             normalizeDriverStructures();
             saveData();
@@ -1145,10 +1201,10 @@
             const container = document.getElementById('toastContainer');
             if (!container) return;
             const toast = document.createElement('div');
-            
+
             let bg = 'bg-slate-800 text-white border-slate-700';
             let icon = 'fa-circle-check text-emerald-400';
-            
+
             if (type === 'warning') {
                 bg = 'bg-amber-900 text-amber-50 border-amber-700';
                 icon = 'fa-triangle-exclamation text-amber-400';
